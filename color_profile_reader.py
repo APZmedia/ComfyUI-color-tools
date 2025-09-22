@@ -218,10 +218,232 @@ class ColorProfileReader:
         return (profile_json, icc_b64, primaries_json, notes_json)
 
 
+class GammaCompare:
+    """
+    ComfyUI node: compares gamma values between two images and provides analysis.
+    Useful for detecting gamma mismatches that could affect color accuracy.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image_path_1": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "placeholder": "Path to first image"
+                }),
+                "image_path_2": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "placeholder": "Path to second image"
+                }),
+                "tolerance": ("FLOAT", {
+                    "default": 0.01,
+                    "min": 0.001,
+                    "max": 0.1,
+                    "step": 0.001,
+                    "display": "number"
+                }),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "STRING", "STRING")
+    RETURN_NAMES = ("comparison_json", "gamma_analysis", "recommendations")
+    FUNCTION = "compare_gamma"
+    CATEGORY = "Image/Color"
+
+    def compare_gamma(self, image_path_1: str, image_path_2: str, tolerance: float):
+        """
+        Compare gamma values between two images and provide analysis.
+        """
+        # Get profile information for both images
+        meta1 = _profile_from_pillow(image_path_1)
+        meta2 = _profile_from_pillow(image_path_2)
+        
+        # Extract gamma values
+        gamma1 = meta1.get("gamma")
+        gamma2 = meta2.get("gamma")
+        
+        # Standard gamma values for reference
+        standard_gammas = {
+            "sRGB": 2.2,
+            "Rec. 709": 2.2,
+            "Rec. 2020": 2.4,
+            "Adobe RGB": 2.2,
+            "DCI-P3": 2.6,
+            "Linear": 1.0,
+            "Mac": 1.8,
+            "PC": 2.2
+        }
+        
+        # Build comparison data
+        comparison = {
+            "image_1": {
+                "path": image_path_1,
+                "gamma": gamma1,
+                "container": meta1.get("container"),
+                "icc_present": meta1.get("icc_present"),
+                "icc_profile_name": meta1.get("icc_profile_name")
+            },
+            "image_2": {
+                "path": image_path_2,
+                "gamma": gamma2,
+                "container": meta2.get("container"),
+                "icc_present": meta2.get("icc_present"),
+                "icc_profile_name": meta2.get("icc_profile_name")
+            },
+            "comparison": {
+                "gamma_difference": abs(gamma1 - gamma2) if gamma1 and gamma2 else None,
+                "within_tolerance": abs(gamma1 - gamma2) <= tolerance if gamma1 and gamma2 else None,
+                "tolerance_used": tolerance
+            }
+        }
+        
+        # Generate analysis
+        analysis = self._generate_gamma_analysis(gamma1, gamma2, standard_gammas, tolerance)
+        
+        # Generate recommendations
+        recommendations = self._generate_recommendations(gamma1, gamma2, meta1, meta2, tolerance)
+        
+        return (
+            json.dumps(comparison, ensure_ascii=False),
+            json.dumps(analysis, ensure_ascii=False),
+            json.dumps(recommendations, ensure_ascii=False)
+        )
+    
+    def _generate_gamma_analysis(self, gamma1, gamma2, standard_gammas, tolerance):
+        """Generate detailed gamma analysis."""
+        analysis = {
+            "gamma_1_analysis": self._analyze_single_gamma(gamma1, standard_gammas),
+            "gamma_2_analysis": self._analyze_single_gamma(gamma2, standard_gammas),
+            "comparison_analysis": {}
+        }
+        
+        if gamma1 and gamma2:
+            diff = abs(gamma1 - gamma2)
+            analysis["comparison_analysis"] = {
+                "difference": diff,
+                "percentage_difference": (diff / min(gamma1, gamma2)) * 100 if min(gamma1, gamma2) > 0 else None,
+                "within_tolerance": diff <= tolerance,
+                "severity": self._assess_gamma_difference_severity(diff, tolerance)
+            }
+        else:
+            analysis["comparison_analysis"] = {
+                "error": "Cannot compare - one or both gamma values are missing"
+            }
+        
+        return analysis
+    
+    def _analyze_single_gamma(self, gamma, standard_gammas):
+        """Analyze a single gamma value."""
+        if gamma is None:
+            return {
+                "status": "missing",
+                "message": "No gamma value found in image",
+                "possible_causes": [
+                    "Image has no gamma information",
+                    "ICC profile overrides gamma",
+                    "Format doesn't support gamma chunks"
+                ]
+            }
+        
+        # Find closest standard gamma
+        closest_standard = min(standard_gammas.items(), 
+                             key=lambda x: abs(x[1] - gamma))
+        
+        return {
+            "status": "present",
+            "value": gamma,
+            "closest_standard": {
+                "name": closest_standard[0],
+                "value": closest_standard[1],
+                "difference": abs(gamma - closest_standard[1])
+            },
+            "interpretation": self._interpret_gamma_value(gamma)
+        }
+    
+    def _interpret_gamma_value(self, gamma):
+        """Interpret what a gamma value means."""
+        if gamma is None:
+            return "No gamma information available"
+        
+        if abs(gamma - 1.0) < 0.01:
+            return "Linear gamma (1.0) - typically used for HDR or linear workflows"
+        elif abs(gamma - 2.2) < 0.01:
+            return "Standard sRGB gamma (2.2) - most common for web and general use"
+        elif abs(gamma - 2.4) < 0.01:
+            return "Rec. 2020 gamma (2.4) - used for wide color gamut displays"
+        elif abs(gamma - 2.6) < 0.01:
+            return "DCI-P3 gamma (2.6) - used for cinema and professional displays"
+        elif abs(gamma - 1.8) < 0.01:
+            return "Mac gamma (1.8) - legacy Mac display standard"
+        elif gamma < 1.5:
+            return f"Low gamma ({gamma:.3f}) - may indicate linear or HDR workflow"
+        elif gamma > 3.0:
+            return f"High gamma ({gamma:.3f}) - unusual, may indicate encoding issues"
+        else:
+            return f"Custom gamma ({gamma:.3f}) - not a standard value"
+    
+    def _assess_gamma_difference_severity(self, diff, tolerance):
+        """Assess the severity of gamma difference."""
+        if diff <= tolerance:
+            return "minimal"
+        elif diff <= tolerance * 2:
+            return "minor"
+        elif diff <= tolerance * 5:
+            return "moderate"
+        elif diff <= tolerance * 10:
+            return "significant"
+        else:
+            return "severe"
+    
+    def _generate_recommendations(self, gamma1, gamma2, meta1, meta2, tolerance):
+        """Generate recommendations based on gamma comparison."""
+        recommendations = {
+            "general": [],
+            "workflow": [],
+            "technical": []
+        }
+        
+        if not gamma1 or not gamma2:
+            recommendations["general"].append("One or both images lack gamma information")
+            recommendations["workflow"].append("Consider using images with proper gamma metadata")
+            return recommendations
+        
+        diff = abs(gamma1 - gamma2)
+        
+        if diff <= tolerance:
+            recommendations["general"].append("Gamma values are compatible")
+            recommendations["workflow"].append("Images should display consistently")
+        else:
+            recommendations["general"].append(f"Gamma mismatch detected (difference: {diff:.3f})")
+            
+            if diff > tolerance * 2:
+                recommendations["workflow"].append("Consider gamma correction for consistent display")
+                recommendations["technical"].append("Use color management tools to match gamma values")
+            
+            if diff > tolerance * 5:
+                recommendations["workflow"].append("Significant gamma difference may cause color shifts")
+                recommendations["technical"].append("Review color pipeline for gamma handling")
+        
+        # ICC profile recommendations
+        if meta1.get("icc_present") and not meta2.get("icc_present"):
+            recommendations["technical"].append("Image 1 has ICC profile, Image 2 doesn't - consider adding profile")
+        elif meta2.get("icc_present") and not meta1.get("icc_present"):
+            recommendations["technical"].append("Image 2 has ICC profile, Image 1 doesn't - consider adding profile")
+        elif not meta1.get("icc_present") and not meta2.get("icc_present"):
+            recommendations["technical"].append("Neither image has ICC profile - consider adding for better color management")
+        
+        return recommendations
+
+
 # ComfyUI node registry
 NODE_CLASS_MAPPINGS = {
-    "ColorProfileReader": ColorProfileReader
+    "ColorProfileReader": ColorProfileReader,
+    "GammaCompare": GammaCompare
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "ColorProfileReader": "Color Profile Reader"
+    "ColorProfileReader": "Color Profile Reader",
+    "GammaCompare": "Gamma Compare"
 }

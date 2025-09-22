@@ -1,0 +1,143 @@
+{
+  "last_node_id": 8,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "GammaCompare",
+      "pos": [100, 100],
+      "size": {"0": 315, "1": 300},
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {"name": "comparison_json", "type": "STRING", "links": [1], "slot_index": 0},
+        {"name": "gamma_analysis", "type": "STRING", "links": [2], "slot_index": 1},
+        {"name": "recommendations", "type": "STRING", "links": [3], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "GammaCompare"},
+      "widgets_values": ["/path/to/image1.jpg", "/path/to/image2.jpg", 0.01]
+    },
+    {
+      "id": 2,
+      "type": "ShowText",
+      "pos": [500, 100],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 1}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 3,
+      "type": "ShowText",
+      "pos": [500, 350],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 2}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 4,
+      "type": "ShowText",
+      "pos": [500, 600],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 3}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 5,
+      "type": "Note",
+      "pos": [100, 450],
+      "size": {"0": 315, "1": 300},
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "properties": {"Node name for S&R": "Note"},
+      "widgets_values": ["Gamma Comparison Workflow\n\nThis workflow demonstrates how to use the Gamma Compare node to analyze gamma differences between two images.\n\nFeatures:\n• Compares gamma values between two images\n• Provides detailed analysis of gamma characteristics\n• Generates recommendations for color management\n• Identifies potential color space issues\n\nUse cases:\n• Quality control for color consistency\n• Detecting gamma mismatches in workflows\n• Analyzing color space compatibility\n• Troubleshooting color display issues"]
+    },
+    {
+      "id": 6,
+      "type": "ColorProfileReader",
+      "pos": [900, 100],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "outputs": [
+        {"name": "profile_json", "type": "STRING", "links": [4], "slot_index": 0},
+        {"name": "icc_base64", "type": "STRING", "links": null, "slot_index": 1},
+        {"name": "primaries_json", "type": "STRING", "links": null, "slot_index": 2},
+        {"name": "notes_json", "type": "STRING", "links": null, "slot_index": 3}
+      ],
+      "properties": {"Node name for S&R": "ColorProfileReader"},
+      "widgets_values": ["/path/to/image1.jpg"]
+    },
+    {
+      "id": 7,
+      "type": "ColorProfileReader",
+      "pos": [900, 350],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "outputs": [
+        {"name": "profile_json", "type": "STRING", "links": [5], "slot_index": 0},
+        {"name": "icc_base64", "type": "STRING", "links": null, "slot_index": 1},
+        {"name": "primaries_json", "type": "STRING", "links": null, "slot_index": 2},
+        {"name": "notes_json", "type": "STRING", "links": null, "slot_index": 3}
+      ],
+      "properties": {"Node name for S&R": "ColorProfileReader"},
+      "widgets_values": ["/path/to/image2.jpg"]
+    },
+    {
+      "id": 8,
+      "type": "ShowText",
+      "pos": [1300, 100],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 4}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 9,
+      "type": "ShowText",
+      "pos": [1300, 350],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 5}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "STRING"],
+    [2, 1, 1, 3, 0, "STRING"],
+    [3, 1, 2, 4, 0, "STRING"],
+    [4, 6, 0, 8, 0, "STRING"],
+    [5, 7, 0, 9, 0, "STRING"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

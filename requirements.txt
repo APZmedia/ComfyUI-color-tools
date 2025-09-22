@@ -1,2 +1,12 @@
 # Core dependencies for color profile reading
 Pillow>=8.0.0
+
+# Additional dependencies for comprehensive color tools
+numpy>=1.21.0
+opencv-python>=4.5.0
+scikit-image>=0.18.0
+matplotlib>=3.5.0
+colorspacious>=1.1.0
+colour-science>=0.3.16
+scipy>=1.7.0
+scikit-learn>=1.0.0

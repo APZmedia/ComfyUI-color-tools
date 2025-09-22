@@ -10,6 +10,12 @@ A ComfyUI custom node for reading color profiles and color space information fro
 - **Multi-format Support**: Works with JPEG, PNG, TIFF, WEBP, and other formats supported by Pillow
 - **Profile Analysis**: Provides detailed information about color profiles and color spaces
 
+### **Gamma Comparison**
+- **Gamma Analysis**: Compares gamma values between two images
+- **Standard Gamma Detection**: Identifies common gamma values (sRGB, Rec. 709, Rec. 2020, etc.)
+- **Tolerance-based Comparison**: Configurable tolerance for gamma difference detection
+- **Detailed Recommendations**: Provides workflow and technical recommendations for gamma mismatches
+
 ### **Output Information**
 - **Profile JSON**: Complete color profile metadata in JSON format
 - **ICC Base64**: Raw ICC profile data encoded in Base64
@@ -74,6 +80,18 @@ The node outputs JSON strings that can be:
 - `primaries_json` (STRING): Color primaries and white point data
 - `notes_json` (STRING): Additional information and warnings
 
+### **Gamma Compare**
+
+**Inputs:**
+- `image_path_1` (STRING): Path to the first image file
+- `image_path_2` (STRING): Path to the second image file
+- `tolerance` (FLOAT): Tolerance for gamma difference detection (0.001-0.1)
+
+**Outputs:**
+- `comparison_json` (STRING): Detailed comparison data between the two images
+- `gamma_analysis` (STRING): In-depth gamma analysis and interpretation
+- `recommendations` (STRING): Workflow and technical recommendations
+
 ### **Profile JSON Structure**
 
 ```json
@@ -108,16 +126,25 @@ The node outputs JSON strings that can be:
 - Verify color profiles in source images
 - Ensure proper color space handling in processing pipelines
 - Detect color profile mismatches that could affect output quality
+- Compare gamma values between images for consistency
 
 ### **Image Analysis**
 - Analyze color characteristics of reference images
 - Extract color space information for documentation
 - Validate color profile compliance
+- Detect gamma mismatches that could cause color shifts
 
 ### **Quality Control**
 - Check for missing or incorrect color profiles
 - Verify color space consistency across image sets
 - Monitor color profile usage in production workflows
+- Ensure gamma consistency in multi-image projects
+
+### **Gamma Comparison Workflows**
+- Compare gamma values between source and output images
+- Detect gamma mismatches in color pipelines
+- Analyze gamma characteristics for color space identification
+- Generate recommendations for gamma correction
 
 ## 🔧 Dependencies
 
