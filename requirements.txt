@@ -10,3 +10,7 @@ colorspacious>=1.1.0
 colour-science>=0.3.16
 scipy>=1.7.0
 scikit-learn>=1.0.0
+
+# Optional dependencies for advanced features
+# torch>=1.9.0  # Usually provided by ComfyUI
+# torchvision>=0.10.0  # Usually provided by ComfyUI
