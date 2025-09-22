@@ -60,6 +60,7 @@ class ColorConverterAdvanced:
             
             # Convert to PIL Image for processing
             import torch
+            import numpy as np
             if hasattr(torch, 'tensor'):
                 # Convert tensor to numpy
                 if hasattr(image, 'cpu'):
