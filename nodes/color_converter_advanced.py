@@ -108,37 +108,44 @@ class ColorConverterAdvanced:
                 # Convert to linear (remove gamma)
                 img_array = self._linearize_gamma(img_array, gamma_value)
                 conversion_info["conversions_applied"].append(f"Linearized with gamma {gamma_value}")
+                conversion_info["gamma_applied"] = f"Linearized (gamma {gamma_value})"
                 
             elif gamma_mode == "apply_gamma":
                 # Apply specific gamma
                 img_array = self._apply_gamma(img_array, gamma_value)
                 conversion_info["conversions_applied"].append(f"Applied gamma {gamma_value}")
+                conversion_info["gamma_applied"] = f"Applied gamma {gamma_value}"
                 
             elif gamma_mode == "sRGB":
                 # Convert to sRGB gamma
                 img_array = self._sRGB_gamma(img_array)
                 conversion_info["conversions_applied"].append("Applied sRGB gamma")
+                conversion_info["gamma_applied"] = "sRGB gamma"
             
             # Step 2: Handle Color Space Conversion
             if colorspace_mode == "sRGB":
                 # Convert to sRGB color space
                 img_array = self._convert_to_sRGB(img_array)
                 conversion_info["conversions_applied"].append("Converted to sRGB color space")
+                conversion_info["colorspace_applied"] = "sRGB"
                 
             elif colorspace_mode == "linear_sRGB":
                 # Convert to linear sRGB
                 img_array = self._convert_to_linear_sRGB(img_array)
                 conversion_info["conversions_applied"].append("Converted to linear sRGB")
+                conversion_info["colorspace_applied"] = "linear sRGB"
                 
             elif colorspace_mode == "Adobe_RGB":
                 # Convert to Adobe RGB
                 img_array = self._convert_to_Adobe_RGB(img_array)
                 conversion_info["conversions_applied"].append("Converted to Adobe RGB")
+                conversion_info["colorspace_applied"] = "Adobe RGB"
                 
             elif colorspace_mode == "ProPhoto_RGB":
                 # Convert to ProPhoto RGB
                 img_array = self._convert_to_ProPhoto_RGB(img_array)
                 conversion_info["conversions_applied"].append("Converted to ProPhoto RGB")
+                conversion_info["colorspace_applied"] = "ProPhoto RGB"
             
             # Step 3: Apply Output Format
             if output_format == "Linear sRGB":
@@ -179,17 +186,19 @@ class ColorConverterAdvanced:
     def _linearize_gamma(self, img_array, gamma):
         """Convert from gamma-encoded to linear"""
         import numpy as np
+        # Convert from gamma-encoded to linear
         return np.power(img_array, gamma)
     
     def _apply_gamma(self, img_array, gamma):
         """Apply gamma correction"""
         import numpy as np
+        # Apply gamma correction (encode to gamma space)
         return np.power(img_array, 1.0 / gamma)
     
     def _sRGB_gamma(self, img_array):
-        """Apply sRGB gamma correction"""
+        """Apply sRGB gamma correction (linearize)"""
         import numpy as np
-        # sRGB EOTF (gamma to linear)
+        # sRGB EOTF (gamma to linear) - this linearizes the image
         return np.where(
             img_array <= 0.04045,
             img_array / 12.92,
@@ -198,8 +207,9 @@ class ColorConverterAdvanced:
     
     def _convert_to_sRGB(self, img_array):
         """Convert to sRGB color space"""
-        # sRGB is the default, so just return
-        return img_array
+        import numpy as np
+        # sRGB is the default, but we can ensure proper gamma
+        return self._sRGB_gamma(img_array)
     
     def _convert_to_linear_sRGB(self, img_array):
         """Convert to linear sRGB"""
@@ -210,15 +220,13 @@ class ColorConverterAdvanced:
     def _convert_to_Adobe_RGB(self, img_array):
         """Convert to Adobe RGB color space"""
         import numpy as np
-        # Adobe RGB has different primaries and gamma
-        # This is a simplified conversion
-        # In practice, you'd use proper color space matrices
-        return img_array
+        # Adobe RGB has gamma 2.2 and different primaries
+        # Apply Adobe RGB gamma correction
+        return np.power(img_array, 1.0 / 2.2)
     
     def _convert_to_ProPhoto_RGB(self, img_array):
         """Convert to ProPhoto RGB color space"""
         import numpy as np
-        # ProPhoto RGB has different primaries and gamma
-        # This is a simplified conversion
-        # In practice, you'd use proper color space matrices
-        return img_array
+        # ProPhoto RGB has gamma 1.8 and different primaries
+        # Apply ProPhoto RGB gamma correction
+        return np.power(img_array, 1.0 / 1.8)
