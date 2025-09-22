@@ -11,42 +11,14 @@ Nodes are organized by functionality:
 - advanced_tools: Advanced color processing nodes
 """
 
+# Import only the core nodes that have minimal dependencies
 from .color_profile_reader import (
     ColorProfileReader,
     GammaCompare,
 )
 
-from .color_profile_convert import (
+from .color_profile_convert_simple import (
     ColorProfileConvert,
-)
-
-from .color_conversion import (
-    ColorSpaceConverter,
-    ColorTemperature,
-    ColorSpaceAnalyzer,
-)
-
-from .color_grading import (
-    ColorBalance,
-    BrightnessContrast,
-    Saturation,
-    HueShift,
-    GammaCorrection,
-)
-
-from .color_analysis import (
-    DominantColors,
-    ColorHistogram,
-    ColorPalette,
-    ColorSimilarity,
-    ColorHarmony,
-)
-
-from .advanced_tools import (
-    ColorMatcher,
-    ColorQuantizer,
-    GamutMapper,
-    ColorBlindSim,
 )
 
 __all__ = [
@@ -56,29 +28,4 @@ __all__ = [
     
     # Color Profile Convert
     "ColorProfileConvert",
-    
-    # Color Conversion
-    "ColorSpaceConverter",
-    "ColorTemperature", 
-    "ColorSpaceAnalyzer",
-    
-    # Color Grading
-    "ColorBalance",
-    "BrightnessContrast",
-    "Saturation",
-    "HueShift",
-    "GammaCorrection",
-    
-    # Color Analysis
-    "DominantColors",
-    "ColorHistogram",
-    "ColorPalette",
-    "ColorSimilarity",
-    "ColorHarmony",
-    
-    # Advanced Tools
-    "ColorMatcher",
-    "ColorQuantizer",
-    "GamutMapper",
-    "ColorBlindSim",
 ]

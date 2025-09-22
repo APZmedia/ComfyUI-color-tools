@@ -5,18 +5,39 @@ import json
 import math
 from typing import Dict, Optional, Tuple
 
-import numpy as np
-import torch
 from PIL import Image, ImageCms
 
+# Lazy imports to avoid side effects at module load time
+_torch = None
+_numpy = None
 
-def _clamp01(t: torch.Tensor) -> torch.Tensor:
+def _get_torch():
+    """Lazy import torch to avoid import side effects"""
+    global _torch
+    if _torch is None:
+        import torch
+        _torch = torch
+    return _torch
+
+
+def _get_numpy():
+    """Lazy import numpy to avoid import side effects"""
+    global _numpy
+    if _numpy is None:
+        import numpy as np
+        _numpy = np
+    return _numpy
+
+
+def _clamp01(t):
+    torch = _get_torch()
     return t.clamp_(0.0, 1.0)
 
 
 # ---- sRGB EOTF/OETF (gamma) ----
 
-def srgb_to_linear_t(t: torch.Tensor) -> torch.Tensor:
+def srgb_to_linear_t(t):
+    torch = _get_torch()
     a = 0.055
     return torch.where(
         t <= 0.04045,
@@ -25,7 +46,8 @@ def srgb_to_linear_t(t: torch.Tensor) -> torch.Tensor:
     )
 
 
-def linear_to_srgb_t(t: torch.Tensor) -> torch.Tensor:
+def linear_to_srgb_t(t):
+    torch = _get_torch()
     a = 0.055
     return torch.where(
         t <= 0.0031308,
@@ -36,9 +58,10 @@ def linear_to_srgb_t(t: torch.Tensor) -> torch.Tensor:
 
 # ---- Simple gamma (PNG gAMA) helpers ----
 
-def gamma_to_linear_t(t: torch.Tensor, encoded_gamma: float) -> torch.Tensor:
+def gamma_to_linear_t(t, encoded_gamma: float):
     # PNG gAMA stores "image gamma". Typical gAMA=0.45455 -> gamma≈1/2.2
     # To get linear: raise to power (1 / gAMA).
+    torch = _get_torch()
     if encoded_gamma is None or encoded_gamma <= 0:
         return t
     return torch.pow(t, 1.0 / encoded_gamma)

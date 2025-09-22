@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+"""
+Install script for ComfyUI Color Tools
+
+This script handles optional dependency installation and setup.
+Runs after pip install -r requirements.txt
+"""
+
+import os
+import sys
+import subprocess
+import importlib.util
+
+def check_dependency(package_name, install_name=None):
+    """Check if a package is available, return True if available"""
+    if install_name is None:
+        install_name = package_name
+    
+    try:
+        spec = importlib.util.find_spec(package_name)
+        return spec is not None
+    except ImportError:
+        return False
+
+def install_optional_dependencies():
+    """Install optional dependencies for advanced color tools"""
+    optional_deps = [
+        ("numpy", "numpy>=1.21.0"),
+        ("cv2", "opencv-python>=4.5.0"),
+        ("skimage", "scikit-image>=0.18.0"),
+        ("matplotlib", "matplotlib>=3.5.0"),
+        ("colorspacious", "colorspacious>=1.1.0"),
+        ("colour", "colour-science>=0.3.16"),
+        ("scipy", "scipy>=1.7.0"),
+        ("sklearn", "scikit-learn>=1.0.0"),
+    ]
+    
+    missing_deps = []
+    for package, install_cmd in optional_deps:
+        if not check_dependency(package):
+            missing_deps.append(install_cmd)
+    
+    if missing_deps:
+        print(f"[ComfyUI Color Tools] Installing {len(missing_deps)} optional dependencies...")
+        try:
+            subprocess.check_call([
+                sys.executable, "-m", "pip", "install"
+            ] + missing_deps)
+            print("[ComfyUI Color Tools] ✅ Optional dependencies installed successfully")
+        except subprocess.CalledProcessError as e:
+            print(f"[ComfyUI Color Tools] ⚠️  Failed to install optional dependencies: {e}")
+            print("[ComfyUI Color Tools] 💡 You can install them manually later if needed")
+    else:
+        print("[ComfyUI Color Tools] ✅ All optional dependencies already available")
+
+def main():
+    """Main installation routine"""
+    print("[ComfyUI Color Tools] Running post-install setup...")
+    
+    # Check if we're in a ComfyUI environment
+    if not os.path.exists("custom_nodes"):
+        print("[ComfyUI Color Tools] ⚠️  Not in ComfyUI directory, skipping optional deps")
+        return
+    
+    # Install optional dependencies
+    install_optional_dependencies()
+    
+    # Verify core dependencies
+    try:
+        import PIL
+        print(f"[ComfyUI Color Tools] ✅ Core dependency Pillow {PIL.__version__} available")
+    except ImportError:
+        print("[ComfyUI Color Tools] ❌ Core dependency Pillow not found!")
+        return
+    
+    # Check for ComfyUI
+    try:
+        import comfy
+        print("[ComfyUI Color Tools] ✅ ComfyUI environment detected")
+    except ImportError:
+        print("[ComfyUI Color Tools] ⚠️  ComfyUI not detected in current environment")
+    
+    print("[ComfyUI Color Tools] 🎉 Installation completed!")
+    print("[ComfyUI Color Tools] 💡 Restart ComfyUI to load the nodes")
+
+if __name__ == "__main__":
+    main()
