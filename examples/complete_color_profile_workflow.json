@@ -1,0 +1,162 @@
+{
+  "last_node_id": 10,
+  "last_link_id": 12,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [100, 100],
+      "size": {"0": 315, "1": 314},
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [1], "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "LoadImage"},
+      "widgets_values": ["input_image.jpg", "image"]
+    },
+    {
+      "id": 2,
+      "type": "ColorProfileReader",
+      "pos": [500, 100],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {"name": "profile_json", "type": "STRING", "links": [2], "slot_index": 0},
+        {"name": "icc_base64", "type": "STRING", "links": [3], "slot_index": 1},
+        {"name": "primaries_json", "type": "STRING", "links": [4], "slot_index": 2},
+        {"name": "notes_json", "type": "STRING", "links": [5], "slot_index": 3}
+      ],
+      "properties": {"Node name for S&R": "ColorProfileReader"},
+      "widgets_values": ["/path/to/input_image.jpg"]
+    },
+    {
+      "id": 3,
+      "type": "ColorProfileConvert",
+      "pos": [900, 100],
+      "size": {"0": 315, "1": 300},
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 1}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "links": [6], "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "ColorProfileConvert"},
+      "widgets_values": ["sRGB", "", -1, 0.0, ""]
+    },
+    {
+      "id": 4,
+      "type": "GammaCompare",
+      "pos": [500, 400],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {"name": "comparison_json", "type": "STRING", "links": [7], "slot_index": 0},
+        {"name": "gamma_analysis", "type": "STRING", "links": [8], "slot_index": 1},
+        {"name": "recommendations", "type": "STRING", "links": [9], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "GammaCompare"},
+      "widgets_values": ["/path/to/input_image.jpg", "/path/to/reference_image.jpg", 0.01]
+    },
+    {
+      "id": 5,
+      "type": "SaveImage",
+      "pos": [1300, 100],
+      "size": {"0": 315, "1": 270},
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "images", "type": "IMAGE", "link": 6}
+      ],
+      "properties": {"Node name for S&R": "SaveImage"},
+      "widgets_values": ["converted_image"]
+    },
+    {
+      "id": 6,
+      "type": "ShowText",
+      "pos": [900, 450],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 2}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 7,
+      "type": "ShowText",
+      "pos": [1300, 450],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 7}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 8,
+      "type": "ShowText",
+      "pos": [1300, 700],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 8}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 9,
+      "type": "ShowText",
+      "pos": [1300, 950],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 9}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 10,
+      "type": "Note",
+      "pos": [100, 450],
+      "size": {"0": 315, "1": 400},
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "properties": {"Node name for S&R": "Note"},
+      "widgets_values": ["Complete Color Profile Workflow\n\nThis workflow demonstrates the full color profile processing pipeline:\n\n1. Load Image - Input image to process\n2. Color Profile Reader - Extract color profile information\n3. Color Profile Convert - Convert to sRGB or linear sRGB\n4. Gamma Compare - Compare gamma values between images\n5. Save Image - Output the converted image\n6. Show Text nodes - Display analysis results\n\nFeatures:\n• ICC profile detection and conversion\n• PNG color space handling\n• Gamma analysis and comparison\n• Chromaticity matrix conversion\n• Complete color management workflow\n\nUse this for professional color-critical workflows where accurate color reproduction is essential."]
+    }
+  ],
+  "links": [
+    [1, 1, 0, 3, 0, "IMAGE"],
+    [2, 2, 0, 6, 0, "STRING"],
+    [3, 2, 1, null, null, "STRING"],
+    [4, 2, 2, null, null, "STRING"],
+    [5, 2, 3, null, null, "STRING"],
+    [6, 3, 0, 5, 0, "IMAGE"],
+    [7, 4, 0, 7, 0, "STRING"],
+    [8, 4, 1, 8, 0, "STRING"],
+    [9, 4, 2, 9, 0, "STRING"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

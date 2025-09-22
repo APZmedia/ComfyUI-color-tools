@@ -21,15 +21,29 @@ print("[ComfyUI Color Tools] Starting node registration...")
 # Import color profile reader nodes
 try:
     print("[ComfyUI Color Tools] Importing color profile reader nodes...")
-    from .color_profile_reader import ColorProfileReader, GammaCompare
+    from .nodes.color_profile_reader import ColorProfileReader, GammaCompare
     print("[ComfyUI Color Tools] ✅ Color Profile Reader nodes imported successfully")
 except ImportError as e:
     print(f"[ComfyUI Color Tools] ⚠️  Relative import failed, trying absolute import: {e}")
     try:
-        from color_profile_reader import ColorProfileReader, GammaCompare
+        from nodes.color_profile_reader import ColorProfileReader, GammaCompare
         print("[ComfyUI Color Tools] ✅ Color Profile Reader nodes imported via absolute import")
     except ImportError as e2:
         print(f"[ComfyUI Color Tools] ❌ Failed to import Color Profile Reader nodes: {e2}")
+        raise e2
+
+# Import color profile convert node
+try:
+    print("[ComfyUI Color Tools] Importing color profile convert node...")
+    from .nodes.color_profile_convert import ColorProfileConvert
+    print("[ComfyUI Color Tools] ✅ Color Profile Convert node imported successfully")
+except ImportError as e:
+    print(f"[ComfyUI Color Tools] ⚠️  Relative import failed, trying absolute import: {e}")
+    try:
+        from nodes.color_profile_convert import ColorProfileConvert
+        print("[ComfyUI Color Tools] ✅ Color Profile Convert node imported via absolute import")
+    except ImportError as e2:
+        print(f"[ComfyUI Color Tools] ❌ Failed to import Color Profile Convert node: {e2}")
         raise e2
 
 # Import all color tools nodes
@@ -116,6 +130,7 @@ NODE_CLASS_MAPPINGS = {
     # Color Profile Reader Nodes
     "ColorProfileReader": ColorProfileReader,
     "GammaCompare": GammaCompare,
+    "ColorProfileConvert": ColorProfileConvert,
     
     # Color Conversion Nodes
     "ColorSpaceConverter": ColorSpaceConverter,
@@ -152,6 +167,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # Color Profile Reader Nodes
     "ColorProfileReader": "Color Profile Reader",
     "GammaCompare": "Gamma Compare",
+    "ColorProfileConvert": "Color Profile → sRGB / Linear",
     
     # Color Conversion Nodes
     "ColorSpaceConverter": "Color Space Converter",

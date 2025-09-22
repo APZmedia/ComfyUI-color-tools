@@ -69,7 +69,10 @@ The node outputs JSON strings that can be:
 
 ## 🛠️ Node Details
 
-### **Color Profile Reader**
+### **📊 Color Profile Nodes**
+
+#### **Color Profile Reader**
+**What it does:** Extracts color profile and color space information from image files. Reads ICC profiles, PNG color space chunks, and other color metadata to understand the color characteristics of your images.
 
 **Inputs:**
 - `image_path` (STRING): Path to the image file (absolute or relative to ComfyUI)
@@ -80,7 +83,8 @@ The node outputs JSON strings that can be:
 - `primaries_json` (STRING): Color primaries and white point data
 - `notes_json` (STRING): Additional information and warnings
 
-### **Gamma Compare**
+#### **Gamma Compare**
+**What it does:** Compares gamma values between two images and provides detailed analysis. Detects gamma mismatches that could affect color accuracy and provides recommendations for color management.
 
 **Inputs:**
 - `image_path_1` (STRING): Path to the first image file
@@ -91,6 +95,230 @@ The node outputs JSON strings that can be:
 - `comparison_json` (STRING): Detailed comparison data between the two images
 - `gamma_analysis` (STRING): In-depth gamma analysis and interpretation
 - `recommendations` (STRING): Workflow and technical recommendations
+
+#### **Color Profile → sRGB / Linear**
+**What it does:** Converts images to sRGB or linear sRGB using ICC profiles, PNG color space data, or chromaticity matrices. Provides professional-grade color space conversion with fallback handling.
+
+**Inputs:**
+- `image` (IMAGE): Input image tensor
+- `target_space` (COMBO): "sRGB" or "sRGB_linear"
+- `icc_profile_base64` (STRING): ICC profile data from ColorProfileReader
+- `png_srgb_intent` (INT): PNG sRGB rendering intent (-1 to 3)
+- `png_gamma` (FLOAT): PNG gamma value
+- `png_chromaticity_json` (STRING): PNG chromaticity data from ColorProfileReader
+
+**Outputs:**
+- `image` (IMAGE): Converted image in target color space
+
+### **🔄 Color Conversion Nodes**
+
+#### **Color Space Converter**
+**What it does:** Converts images between different color spaces including RGB, HSV, HSL, LAB, XYZ, and CMYK. Supports gamma correction and preserves alpha channels.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `source_space` (COMBO): Source color space
+- `target_space` (COMBO): Target color space
+- `preserve_alpha` (BOOLEAN): Whether to preserve alpha channel
+- `gamma_correction` (FLOAT): Gamma correction value
+
+**Outputs:**
+- `image` (IMAGE): Converted image
+- `conversion_info` (STRING): Conversion details
+
+#### **Color Temperature**
+**What it does:** Adjusts color temperature and tint of images. Simulates warm/cool lighting conditions and provides fine control over color balance.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `temperature` (FLOAT): Temperature adjustment (-100 to 100)
+- `tint` (FLOAT): Tint adjustment (-100 to 100)
+
+**Outputs:**
+- `image` (IMAGE): Temperature-adjusted image
+
+#### **Color Space Analyzer**
+**What it does:** Analyzes color space properties and provides detailed information about image characteristics. Generates recommendations for color management.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+
+**Outputs:**
+- `color_space_info` (STRING): Color space information
+- `color_stats` (STRING): Color statistics
+- `recommendations` (STRING): Color management recommendations
+
+### **🎨 Color Grading Nodes**
+
+#### **Color Balance**
+**What it does:** Adjusts color balance for shadows, midtones, and highlights separately. Provides professional color correction capabilities similar to video editing software.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `shadow_red/green/blue` (FLOAT): Shadow color adjustments
+- `midtone_red/green/blue` (FLOAT): Midtone color adjustments
+- `highlight_red/green/blue` (FLOAT): Highlight color adjustments
+
+**Outputs:**
+- `image` (IMAGE): Color-balanced image
+
+#### **Brightness/Contrast**
+**What it does:** Adjusts brightness and contrast of images. Provides precise control over exposure and contrast levels.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `brightness` (FLOAT): Brightness adjustment (-1.0 to 1.0)
+- `contrast` (FLOAT): Contrast adjustment (0.0 to 3.0)
+
+**Outputs:**
+- `image` (IMAGE): Adjusted image
+
+#### **Saturation**
+**What it does:** Adjusts color saturation while optionally preserving luminance. Can boost or reduce color intensity.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `saturation` (FLOAT): Saturation multiplier (0.0 to 3.0)
+- `preserve_luminance` (BOOLEAN): Whether to preserve luminance
+
+**Outputs:**
+- `image` (IMAGE): Saturation-adjusted image
+
+#### **Hue Shift**
+**What it does:** Shifts hue values of images. Useful for color correction and creative color effects.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `hue_shift` (FLOAT): Hue shift in degrees (-180 to 180)
+
+**Outputs:**
+- `image` (IMAGE): Hue-shifted image
+
+#### **Gamma Correction**
+**What it does:** Applies gamma correction to images. Essential for proper color management and display calibration.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `gamma` (FLOAT): Gamma value (0.1 to 5.0)
+
+**Outputs:**
+- `image` (IMAGE): Gamma-corrected image
+
+### **📈 Color Analysis Nodes**
+
+#### **Dominant Colors**
+**What it does:** Extracts dominant colors from images using K-means clustering. Useful for color palette generation and color scheme analysis.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `num_colors` (INT): Number of colors to extract (1-20)
+- `color_format` (COMBO): Output format (RGB, HSV, HEX)
+
+**Outputs:**
+- `dominant_colors` (STRING): Extracted colors as JSON
+- `color_percentages` (STRING): Color percentages as JSON
+
+#### **Color Histogram**
+**What it does:** Generates color histograms for analysis. Provides detailed color distribution information across different color spaces.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `bins` (INT): Number of histogram bins (32-512)
+- `histogram_type` (COMBO): Color space for histogram (RGB, HSV, LAB)
+
+**Outputs:**
+- `histogram_data` (STRING): Histogram data as JSON
+- `statistics` (STRING): Color statistics as JSON
+
+#### **Color Palette**
+**What it does:** Generates comprehensive color palettes from images using various quantization methods. Creates color schemes for design workflows.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `palette_size` (INT): Number of colors in palette (3-32)
+- `palette_type` (COMBO): Quantization method (K-means, Median Cut, Octree)
+
+**Outputs:**
+- `palette` (STRING): Color palette as JSON
+- `palette_info` (STRING): Palette information as JSON
+
+#### **Color Similarity**
+**What it does:** Finds colors similar to a target color based on color distance. Useful for color matching and replacement workflows.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `target_color` (STRING): Target color (hex or RGB)
+- `similarity_threshold` (FLOAT): Similarity threshold (0.0-1.0)
+- `color_space` (COMBO): Color space for comparison (RGB, HSV, LAB)
+
+**Outputs:**
+- `mask` (IMAGE): Similarity mask
+- `similarity_info` (STRING): Similarity analysis as JSON
+
+#### **Color Harmony**
+**What it does:** Analyzes color harmony and relationships in images. Evaluates complementary, triadic, analogous, and other color harmony types.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `harmony_type` (COMBO): Type of harmony to analyze
+
+**Outputs:**
+- `harmony_analysis` (STRING): Harmony analysis as JSON
+- `color_relationships` (STRING): Color relationships as JSON
+
+### **🔧 Advanced Tools Nodes**
+
+#### **Color Matcher**
+**What it does:** Matches and replaces colors in images. Supports exact, similar, and hue-only matching modes for color correction workflows.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `source_color` (STRING): Color to match
+- `target_color` (STRING): Replacement color
+- `tolerance` (FLOAT): Matching tolerance (0.0-1.0)
+- `replace_mode` (COMBO): Replacement mode (Exact, Similar, Hue Only)
+
+**Outputs:**
+- `image` (IMAGE): Color-matched image
+- `replacement_info` (STRING): Replacement statistics as JSON
+
+#### **Color Quantizer**
+**What it does:** Reduces the number of colors in images using various quantization methods. Useful for creating indexed color images and artistic effects.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `num_colors` (INT): Target number of colors (2-256)
+- `quantization_method` (COMBO): Quantization method (K-means, Median Cut, Octree, Uniform)
+- `dithering` (BOOLEAN): Whether to apply dithering
+
+**Outputs:**
+- `image` (IMAGE): Quantized image
+- `quantization_info` (STRING): Quantization statistics as JSON
+
+#### **Gamut Mapper**
+**What it does:** Maps colors between different color gamuts. Essential for color management when working with different display technologies.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `source_gamut` (COMBO): Source color gamut
+- `target_gamut` (COMBO): Target color gamut
+- `mapping_method` (COMBO): Gamut mapping method (Perceptual, Relative, Saturation, Absolute)
+
+**Outputs:**
+- `image` (IMAGE): Gamut-mapped image
+- `mapping_info` (STRING): Mapping information as JSON
+
+#### **Color Blind Simulator**
+**What it does:** Simulates different types of color blindness. Useful for accessibility testing and understanding how color-blind users perceive images.
+
+**Inputs:**
+- `image` (IMAGE): Input image
+- `color_blindness_type` (COMBO): Type of color blindness to simulate
+- `severity` (FLOAT): Simulation severity (0.0-1.0)
+
+**Outputs:**
+- `image` (IMAGE): Simulated image
+- `simulation_info` (STRING): Simulation details as JSON
 
 ### **Profile JSON Structure**
 
