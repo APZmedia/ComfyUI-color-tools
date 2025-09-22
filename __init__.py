@@ -11,7 +11,7 @@ try:
     # Try relative import first (works in ComfyUI)
     from .nodes.color_profile_reader import ColorProfileReader, GammaCompare
     from .nodes.color_profile_convert_simple import ColorProfileConvert
-except ImportError:
+except (ImportError, ValueError):
     # Fallback to absolute import (works when running directly)
     from nodes.color_profile_reader import ColorProfileReader, GammaCompare
     from nodes.color_profile_convert_simple import ColorProfileConvert
