@@ -21,6 +21,10 @@ from .color_profile_convert_simple import (
     ColorProfileConvert,
 )
 
+from .color_converter_advanced import (
+    ColorConverterAdvanced,
+)
+
 __all__ = [
     # Color Profile Reader
     "ColorProfileReader",
@@ -28,4 +32,7 @@ __all__ = [
     
     # Color Profile Convert
     "ColorProfileConvert",
+    
+    # Advanced Color Converter
+    "ColorConverterAdvanced",
 ]
