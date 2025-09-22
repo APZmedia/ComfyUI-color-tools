@@ -7,8 +7,14 @@ color grading, palette extraction, color analysis tools, and color profile readi
 """
 
 # Import only the core nodes that have minimal dependencies
-from nodes.color_profile_reader import ColorProfileReader, GammaCompare
-from nodes.color_profile_convert_simple import ColorProfileConvert
+try:
+    # Try relative import first (works in ComfyUI)
+    from .nodes.color_profile_reader import ColorProfileReader, GammaCompare
+    from .nodes.color_profile_convert_simple import ColorProfileConvert
+except ImportError:
+    # Fallback to absolute import (works when running directly)
+    from nodes.color_profile_reader import ColorProfileReader, GammaCompare
+    from nodes.color_profile_convert_simple import ColorProfileConvert
 
 # Core nodes (always available - minimal dependencies)
 NODE_CLASS_MAPPINGS = {
