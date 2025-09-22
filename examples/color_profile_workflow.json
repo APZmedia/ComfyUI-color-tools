@@ -1,0 +1,96 @@
+{
+  "last_node_id": 6,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "ColorProfileReader",
+      "pos": [100, 100],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {"name": "profile_json", "type": "STRING", "links": [1], "slot_index": 0},
+        {"name": "icc_base64", "type": "STRING", "links": [2], "slot_index": 1},
+        {"name": "primaries_json", "type": "STRING", "links": [3], "slot_index": 2},
+        {"name": "notes_json", "type": "STRING", "links": [4], "slot_index": 3}
+      ],
+      "properties": {"Node name for S&R": "ColorProfileReader"},
+      "widgets_values": ["/path/to/your/image.jpg"]
+    },
+    {
+      "id": 2,
+      "type": "ShowText",
+      "pos": [500, 100],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 1}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 3,
+      "type": "ShowText",
+      "pos": [500, 350],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 2}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 4,
+      "type": "ShowText",
+      "pos": [500, 600],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 3}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 5,
+      "type": "ShowText",
+      "pos": [500, 850],
+      "size": {"0": 315, "1": 200},
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 4}
+      ],
+      "properties": {"Node name for S&R": "ShowText"}
+    },
+    {
+      "id": 6,
+      "type": "Note",
+      "pos": [100, 350],
+      "size": {"0": 315, "1": 300},
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "properties": {"Node name for S&R": "Note"},
+      "widgets_values": ["Color Profile Reader Workflow\n\nThis workflow demonstrates how to use the Color Profile Reader node to extract color profile information from images.\n\n1. Set the image path in the Color Profile Reader node\n2. Connect the outputs to ShowText nodes to display the results\n3. The workflow shows:\n   - Complete profile JSON\n   - ICC profile data (Base64)\n   - Color primaries information\n   - Notes and warnings\n\nUse this to analyze color profiles in your images and ensure proper color management."]
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "STRING"],
+    [2, 1, 1, 3, 0, "STRING"],
+    [3, 1, 2, 4, 0, "STRING"],
+    [4, 1, 3, 5, 0, "STRING"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

@@ -1,0 +1,2 @@
+# Core dependencies for color profile reading
+Pillow>=8.0.0

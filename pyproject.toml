@@ -1,0 +1,123 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ComfyUI-color-tools"
+version = "1.0.0"
+description = "A comprehensive collection of color manipulation and analysis nodes for ComfyUI"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Pablo Apiolazza", email = "me@apzmedia.com"}
+]
+maintainers = [
+    {name = "Pablo Apiolazza", email = "me@apzmedia.com"}
+]
+keywords = ["comfyui", "color", "image-processing", "computer-vision", "graphics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.21.0",
+    "opencv-python>=4.5.0",
+    "Pillow>=8.0.0",
+    "scikit-image>=0.18.0",
+    "matplotlib>=3.5.0",
+    "colorspacious>=1.1.0",
+    "colour-science>=0.3.16",
+    "scipy>=1.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/APZmedia/ComfyUI-color-tools"
+Repository = "https://github.com/APZmedia/ComfyUI-color-tools"
+Issues = "https://github.com/APZmedia/ComfyUI-color-tools/issues"
+Documentation = "https://github.com/APZmedia/ComfyUI-color-tools#readme"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+    "black>=21.0",
+    "flake8>=3.8",
+    "mypy>=0.800",
+]
+docs = [
+    "sphinx>=4.0",
+    "sphinx-rtd-theme>=0.5",
+    "myst-parser>=0.15",
+]
+visualization = [
+    "seaborn>=0.11.0",
+    "plotly>=5.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["comfyui_color_tools*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.md", "*.txt", "*.js"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=comfyui_color_tools",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
