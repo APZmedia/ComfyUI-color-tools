@@ -47,14 +47,6 @@ advanced = [
     "scipy>=1.7.0",
     "scikit-learn>=1.0.0",
 ]
-
-[project.urls]
-Homepage = "https://github.com/APZmedia/ComfyUI-color-tools"
-Repository = "https://github.com/APZmedia/ComfyUI-color-tools"
-Issues = "https://github.com/APZmedia/ComfyUI-color-tools/issues"
-Documentation = "https://github.com/APZmedia/ComfyUI-color-tools#readme"
-
-[project.optional-dependencies]
 dev = [
     "pytest>=6.0",
     "pytest-cov>=2.0",
@@ -71,6 +63,12 @@ visualization = [
     "seaborn>=0.11.0",
     "plotly>=5.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/APZmedia/ComfyUI-color-tools"
+Repository = "https://github.com/APZmedia/ComfyUI-color-tools"
+Issues = "https://github.com/APZmedia/ComfyUI-color-tools/issues"
+Documentation = "https://github.com/APZmedia/ComfyUI-color-tools#readme"
 
 [tool.setuptools.packages.find]
 where = ["."]
