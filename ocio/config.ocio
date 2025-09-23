@@ -1,0 +1,40 @@
+ocio_profile_version: 2
+
+description: A minimal, LUT-free configuration for basic color transformations.
+
+roles:
+  default: raw
+  scene_linear: Linear
+  color_picking: sRGB
+  texture_paint: sRGB
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+    - !<View> {name: sRGB, colorspace: sRGB}
+    - !<View> {name: Linear, colorspace: Linear}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: Linear
+    family: "scene"
+    categories: [file-io]
+    description: |
+      Scene-linear sRGB/Rec.709
+    to_reference: !<MatrixTransform> {matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: sRGB
+    family: "display"
+    categories: [file-io]
+    description: |
+      Standard sRGB display space
+    from_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [ 3.24096994, -1.53738318, -0.49861076, 0, -0.96924364,  1.8759675,   0.04155506, 0, 0.05563008, -0.20397696,  1.05697151, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
