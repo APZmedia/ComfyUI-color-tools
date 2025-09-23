@@ -33,6 +33,7 @@ def install_optional_dependencies():
         ("colour", "colour-science>=0.3.16"),
         ("scipy", "scipy>=1.7.0"),
         ("sklearn", "scikit-learn>=1.0.0"),
+        ("PyOpenColorIO", "opencolorio>=2.0.0"),
     ]
     
     missing_deps = []
@@ -42,14 +43,20 @@ def install_optional_dependencies():
     
     if missing_deps:
         print(f"[ComfyUI Color Tools] Installing {len(missing_deps)} optional dependencies...")
+        if any("opencolorio" in dep for dep in missing_deps):
+            print("[ComfyUI Color Tools] 📷 OCIO support will be installed")
         try:
             subprocess.check_call([
                 sys.executable, "-m", "pip", "install"
             ] + missing_deps)
             print("[ComfyUI Color Tools] ✅ Optional dependencies installed successfully")
+            if any("opencolorio" in dep for dep in missing_deps):
+                print("[ComfyUI Color Tools] 🎉 OCIO Color Space Converter and related nodes are now available")
         except subprocess.CalledProcessError as e:
             print(f"[ComfyUI Color Tools] ⚠️  Failed to install optional dependencies: {e}")
             print("[ComfyUI Color Tools] 💡 You can install them manually later if needed")
+            if any("opencolorio" in dep for dep in missing_deps):
+                print("[ComfyUI Color Tools] 📷 Note: OCIO nodes will not be available without PyOpenColorIO")
     else:
         print("[ComfyUI Color Tools] ✅ All optional dependencies already available")
 

@@ -30,15 +30,22 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
+    "Pillow>=8.0.0",
+]
+
+[project.optional-dependencies]
+ocio = [
+    "opencolorio>=2.0.0",
+]
+advanced = [
     "numpy>=1.21.0",
     "opencv-python>=4.5.0",
-    "Pillow>=8.0.0",
     "scikit-image>=0.18.0",
     "matplotlib>=3.5.0",
     "colorspacious>=1.1.0",
     "colour-science>=0.3.16",
     "scipy>=1.7.0",
-    "opencolorio>=2.0.0",
+    "scikit-learn>=1.0.0",
 ]
 
 [project.urls]

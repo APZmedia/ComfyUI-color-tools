@@ -1,8 +1,8 @@
 # Core dependencies for color profile reading (minimal)
 Pillow>=8.0.0
 
-# OCIO support
-opencolorio>=2.0.0
+# OCIO support (installed automatically if possible)
+# opencolorio>=2.0.0
 
 # Optional dependencies for advanced color tools (install separately if needed)
 # numpy>=1.21.0
