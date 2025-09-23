@@ -29,10 +29,12 @@ try:
 
     print("[Color Tools] Attempting to import OCIO nodes...")
     from .nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator
+    from .nodes.ocio_advanced import AdvancedOcioColorTransform
     loaded_nodes["OCIOColorSpaceConverter"] = OCIOColorSpaceConverter
     loaded_nodes["OCIOConfigInfo"] = OCIOConfigInfo
     loaded_nodes["TestPatternGenerator"] = TestPatternGenerator
-    print("[Color Tools] ✅ Loaded: OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator")
+    loaded_nodes["AdvancedOcioColorTransform"] = AdvancedOcioColorTransform
+    print("[Color Tools] ✅ Loaded: OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator, AdvancedOcioColorTransform")
 
 except (ImportError, ValueError) as e:
     print(f"[Color Tools] ⚠️  Import Error: {e}")
@@ -51,6 +53,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "OCIOColorSpaceConverter": "OCIO Color Space Converter",
     "OCIOConfigInfo": "OCIO Config Info",
     "TestPatternGenerator": "Test Pattern Generator",
+    "AdvancedOcioColorTransform": "Advanced OCIO Color Transform",
 }
 
 print(f"[Color Tools] --- Registration ---")
