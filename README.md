@@ -59,6 +59,35 @@ A ComfyUI custom node for reading color profiles and color space information fro
    - `primaries_json`: Color primaries information
    - `notes_json`: Any additional notes or warnings
 
+### OCIO Configuration Usage
+
+The OCIO nodes work with both built-in configurations and custom files:
+
+#### **Official OCIO Configurations**
+1. Download OCIO configurations from the Academy Software Foundation ACES config repo:
+   - Main repository: https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/tree/main
+   - Download releases: https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/releases
+   - Extract the `.ocio` file to your desired location (e.g., within your project folder or system config directory)
+
+2. For the ACES config, recommended locations:
+   - `C:\ProgramData\OpenColorIO\config.ocio` (Windows)
+   - `/usr/local/share/OpenColorIO/config.ocio` (Linux/Mac)
+   - Or any path you can easily reference for your project
+
+3. In the OCIO Color Space Converter node, enter the full path to your `.ocio` file in the `ocio_config_path` input
+
+#### **Example Usage**
+```
+OCIO Config Path: C:\ProgramData\OpenColorIO\config.ocio
+Source Color Space: sRGB
+Target Color Space: ACEScg
+```
+
+If no config path is specified, the nodes use OCIO's default built-in configuration.
+
+#### **Getting OCIO Config Info**
+Use the OCIO Config Info node to see what color spaces are available in your configuration and understand the structure.
+
 ### Workflow Integration
 
 The node outputs JSON strings that can be:
@@ -320,6 +349,30 @@ The node outputs JSON strings that can be:
 - `image` (IMAGE): Simulated image
 - `simulation_info` (STRING): Simulation details as JSON
 
+### **☹️ OCIO Nodes**
+
+#### **OCIO Color Space Converter**
+**What it does:** Professional color space conversions using OpenColorIO configurations. Supports industry-standard color pipelines and professional color management.
+
+**Inputs:**
+- `image` (IMAGE): Input image tensor
+- `ocio_config_path` (STRING): Path to .ocio configuration file (optional)
+- `source_colorspace` (STRING): Source color space name
+- `target_colorspace` (STRING): Target color space name
+
+**Outputs:**
+- `image` (IMAGE): Converted image in target color space
+- `conversion_info` (STRING): Conversion details and metadata
+
+#### **OCIO Config Info**
+**What it does:** Displays information about OCIO configurations, including available color spaces, displays, and viewing transforms.
+
+**Inputs:**
+- `ocio_config_path` (STRING): Path to .ocio configuration file (optional)
+
+**Outputs:**
+- `config_info` (STRING): Detailed configuration information
+
 ### **Profile JSON Structure**
 
 ```json
@@ -377,6 +430,7 @@ The node outputs JSON strings that can be:
 ## 🔧 Dependencies
 
 - `Pillow>=8.0.0`: Image processing and ICC profile support
+- `opencolorio>=2.0.0`: Professional color management (OCIO nodes)
 
 ## 📁 Project Structure
 
@@ -385,8 +439,19 @@ ComfyUI-color-tools/
 ├── README.md
 ├── LICENSE
 ├── requirements.txt
+├── pyproject.toml
 ├── __init__.py
-├── color_profile_reader.py
+├── nodes/
+│   ├── __init__.py
+│   ├── advanced_tools.py
+│   ├── color_analysis.py
+│   ├── color_conversion.py
+│   ├── color_converter_advanced.py
+│   ├── color_grading.py
+│   ├── color_profile_convert.py
+│   ├── color_profile_convert_simple.py
+│   ├── color_profile_reader.py
+│   └── ocio_tools.py  (OpenColorIO integration)
 └── examples/
     └── color_profile_workflow.json
 ```

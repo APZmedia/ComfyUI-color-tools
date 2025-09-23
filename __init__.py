@@ -12,11 +12,13 @@ try:
     from .nodes.color_profile_reader import ColorProfileReader, GammaCompare
     from .nodes.color_profile_convert_simple import ColorProfileConvert
     from .nodes.color_converter_advanced import ColorConverterAdvanced
+    from .nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo
 except (ImportError, ValueError):
     # Fallback to absolute import (works when running directly)
     from nodes.color_profile_reader import ColorProfileReader, GammaCompare
     from nodes.color_profile_convert_simple import ColorProfileConvert
     from nodes.color_converter_advanced import ColorConverterAdvanced
+    from nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo
 
 # Core nodes (always available - minimal dependencies)
 NODE_CLASS_MAPPINGS = {
@@ -24,14 +26,18 @@ NODE_CLASS_MAPPINGS = {
     "GammaCompare": GammaCompare,
     "ColorProfileConvert": ColorProfileConvert,
     "ColorConverterAdvanced": ColorConverterAdvanced,
+    "OCIOColorSpaceConverter": OCIOColorSpaceConverter,
+    "OCIOConfigInfo": OCIOConfigInfo,
 }
 
 # Display names for the ComfyUI interface
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ColorProfileReader": "Read Image Color Profile",
-    "GammaCompare": "Compare Image Gamma Values", 
+    "GammaCompare": "Compare Image Gamma Values",
     "ColorProfileConvert": "Convert Image Color Space",
     "ColorConverterAdvanced": "Advanced Color Converter",
+    "OCIOColorSpaceConverter": "OCIO Color Space Converter",
+    "OCIOConfigInfo": "OCIO Config Info",
 }
 
 # Export the mappings for ComfyUI
