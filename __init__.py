@@ -6,43 +6,40 @@ This package provides advanced color processing capabilities including color spa
 color grading, palette extraction, color analysis tools, and color profile reading.
 """
 
-print("--- ComfyUI Color Tools: Initializing ---")
+import os
+import subprocess
+import sys
 
-# A dictionary to hold all loaded node classes
-loaded_nodes = {}
-
-# Import process with detailed logging
+# Run the installation script before trying to import any nodes
+install_script_path = os.path.join(os.path.dirname(__file__), "install.py")
 try:
-    print("[Color Tools] Attempting to import core nodes...")
+    print("[ComfyUI Color Tools]  initiator: Running installation script...")
+    subprocess.check_call([sys.executable, install_script_path])
+except (subprocess.CalledProcessError, FileNotFoundError) as e:
+    print(f"[ComfyUI Color Tools] ⚠️  Initiator: Failed to run install script: {e}")
+
+# Node imports
+try:
     from .nodes.color_profile_reader import ColorProfileReader, GammaCompare
-    loaded_nodes["ColorProfileReader"] = ColorProfileReader
-    loaded_nodes["GammaCompare"] = GammaCompare
-    print("[Color Tools] ✅ Loaded: ColorProfileReader, GammaCompare")
-
     from .nodes.color_profile_convert_simple import ColorProfileConvert
-    loaded_nodes["ColorProfileConvert"] = ColorProfileConvert
-    print("[Color Tools] ✅ Loaded: ColorProfileConvert")
-
     from .nodes.color_converter_advanced import ColorConverterAdvanced
-    loaded_nodes["ColorConverterAdvanced"] = ColorConverterAdvanced
-    print("[Color Tools] ✅ Loaded: ColorConverterAdvanced")
-
-    print("[Color Tools] Attempting to import OCIO nodes...")
     from .nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator
     from .nodes.ocio_advanced import AdvancedOcioColorTransform
-    loaded_nodes["OCIOColorSpaceConverter"] = OCIOColorSpaceConverter
-    loaded_nodes["OCIOConfigInfo"] = OCIOConfigInfo
-    loaded_nodes["TestPatternGenerator"] = TestPatternGenerator
-    loaded_nodes["AdvancedOcioColorTransform"] = AdvancedOcioColorTransform
-    print("[Color Tools] ✅ Loaded: OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator, AdvancedOcioColorTransform")
 
-except (ImportError, ValueError) as e:
-    print(f"[Color Tools] ⚠️  Import Error: {e}")
-    print("[Color Tools] 💡 Some nodes may not be available. This can happen if a dependency is missing.")
-    print("[Color Tools] 💡 OCIO nodes require the 'opencolorio' package. Check your environment.")
-
-# Define mappings based on successfully loaded nodes
-NODE_CLASS_MAPPINGS = loaded_nodes
+    NODE_CLASS_MAPPINGS = {
+        "ColorProfileReader": ColorProfileReader,
+        "GammaCompare": GammaCompare,
+        "ColorProfileConvert": ColorProfileConvert,
+        "ColorConverterAdvanced": ColorConverterAdvanced,
+        "OCIOColorSpaceConverter": OCIOColorSpaceConverter,
+        "OCIOConfigInfo": OCIOConfigInfo,
+        "TestPatternGenerator": TestPatternGenerator,
+        "AdvancedOcioColorTransform": AdvancedOcioColorTransform,
+    }
+except ImportError as e:
+    print(f"[ComfyUI Color Tools] ❌ Failed to import nodes: {e}")
+    print("[ComfyUI Color Tools] 💡 This can happen if dependencies are missing. Please check the console for installation errors.")
+    NODE_CLASS_MAPPINGS = {}
 
 # Display names for all potential nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -56,18 +53,12 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "AdvancedOcioColorTransform": "Advanced OCIO Color Transform",
 }
 
-print(f"[Color Tools] --- Registration ---")
-print(f"[Color Tools] 📌 Registered {len(NODE_CLASS_MAPPINGS)} node classes:")
-for name in NODE_CLASS_MAPPINGS.keys():
-    display_name = NODE_DISPLAY_NAME_MAPPINGS.get(name, "Unknown")
-    print(f"[Color Tools]   - {name} -> '{display_name}'")
-
 # Filter display names to only those that were successfully loaded
 NODE_DISPLAY_NAME_MAPPINGS = {
     key: value for key, value in NODE_DISPLAY_NAME_MAPPINGS.items() if key in NODE_CLASS_MAPPINGS
 }
 
-print("--- ComfyUI Color Tools: Initialization Complete ---")
+print(f"[ComfyUI Color Tools] --- Registration ---")
+print(f"[ComfyUI Color Tools] ✅ Registered {len(NODE_CLASS_MAPPINGS)} nodes.")
 
-# Export the mappings for ComfyUI
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

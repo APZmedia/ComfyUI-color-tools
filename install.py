@@ -71,9 +71,10 @@ def main():
     """Main installation routine"""
     print("[ComfyUI Color Tools] Running post-install setup...")
     
-    # Check if we're in a ComfyUI environment
-    if not os.path.exists("custom_nodes"):
-        print("[ComfyUI Color Tools] ⚠️  Not in ComfyUI directory, skipping optional deps")
+    # Check if we're in a ComfyUI environment by checking for the root main.py
+    comfy_root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    if not os.path.isfile(os.path.join(comfy_root_dir, "main.py")):
+        print(f"[ComfyUI Color Tools] ⚠️  Could not find ComfyUI root at '{comfy_root_dir}', skipping optional dependency installation.")
         return
     
     # Install optional dependencies
