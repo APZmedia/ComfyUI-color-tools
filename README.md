@@ -373,6 +373,20 @@ The node outputs JSON strings that can be:
 **Outputs:**
 - `config_info` (STRING): Detailed configuration information
 
+#### **Test Pattern Generator**
+**What it does:** Generates test patterns for color space validation and calibration. Creates color bars, tone ramps, SMPTE color bars, and ColorChecker-like patterns essential for testing OCIO transforms.
+
+**Inputs:**
+- `pattern_type` (COMBO): Type of test pattern (Color Bars, Tone Ramp, Gray Ramp, SMPTE Color Bars, ColorChecker)
+- `width` (INT): Pattern width in pixels
+- `height` (INT): Pattern height in pixels
+
+**Outputs:**
+- `test_pattern` (IMAGE): Generated test pattern image
+- `pattern_info` (STRING): Description of the generated pattern
+
+Recommended workflow: Generate test patterns, convert them through OCIO color spaces, and visually compare results to validate color accuracy.
+
 ### **Profile JSON Structure**
 
 ```json

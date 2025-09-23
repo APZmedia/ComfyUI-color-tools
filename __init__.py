@@ -12,13 +12,13 @@ try:
     from .nodes.color_profile_reader import ColorProfileReader, GammaCompare
     from .nodes.color_profile_convert_simple import ColorProfileConvert
     from .nodes.color_converter_advanced import ColorConverterAdvanced
-    from .nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo
+    from .nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator
 except (ImportError, ValueError):
     # Fallback to absolute import (works when running directly)
     from nodes.color_profile_reader import ColorProfileReader, GammaCompare
     from nodes.color_profile_convert_simple import ColorProfileConvert
     from nodes.color_converter_advanced import ColorConverterAdvanced
-    from nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo
+    from nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator
 
 # Core nodes (always available - minimal dependencies)
 NODE_CLASS_MAPPINGS = {
@@ -28,6 +28,7 @@ NODE_CLASS_MAPPINGS = {
     "ColorConverterAdvanced": ColorConverterAdvanced,
     "OCIOColorSpaceConverter": OCIOColorSpaceConverter,
     "OCIOConfigInfo": OCIOConfigInfo,
+    "TestPatternGenerator": TestPatternGenerator,
 }
 
 # Display names for the ComfyUI interface
@@ -38,6 +39,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ColorConverterAdvanced": "Advanced Color Converter",
     "OCIOColorSpaceConverter": "OCIO Color Space Converter",
     "OCIOConfigInfo": "OCIO Config Info",
+    "TestPatternGenerator": "Test Pattern Generator",
 }
 
 # Export the mappings for ComfyUI
