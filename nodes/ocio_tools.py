@@ -7,10 +7,14 @@ color space conversions and color processing.
 
 import torch
 import numpy as np
+
+print("[Color Tools]  initializing ocio_tools.py")
 try:
     import PyOpenColorIO as ocio
-except ImportError:
-    print("PyOpenColorIO not available. OCIO nodes will not work.")
+    print("[Color Tools] ✅ PyOpenColorIO imported successfully")
+except ImportError as e:
+    print(f"[Color Tools] ❌ Failed to import PyOpenColorIO: {e}")
+    print("[Color Tools] ⚠️ OCIO nodes will not be available.")
     ocio = None
 
 from typing import Tuple, Optional

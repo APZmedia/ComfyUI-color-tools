@@ -16,10 +16,17 @@ def check_dependency(package_name, install_name=None):
     if install_name is None:
         install_name = package_name
     
+    print(f"[ComfyUI Color Tools] Checking for dependency: {package_name}")
     try:
         spec = importlib.util.find_spec(package_name)
-        return spec is not None
+        if spec is not None:
+            print(f"[ComfyUI Color Tools] ✅ Found {package_name}")
+            return True
+        else:
+            print(f"[ComfyUI Color Tools] ❌ {package_name} not found")
+            return False
     except ImportError:
+        print(f"[ComfyUI Color Tools] ❌ ImportError when checking for {package_name}")
         return False
 
 def install_optional_dependencies():
