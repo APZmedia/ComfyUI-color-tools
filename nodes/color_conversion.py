@@ -16,18 +16,21 @@ class ColorSpaceConverter:
     """
     Convert images between different color spaces.
     Supports RGB, HSV, HSL, LAB, XYZ, CMYK conversions.
+    Works with both file paths and image tensors.
     """
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "input_mode": (["file", "tensor"], {"default": "tensor"}),
                 "source_space": (["RGB", "HSV", "HSL", "LAB", "XYZ", "CMYK"],),
                 "target_space": (["RGB", "HSV", "HSL", "LAB", "XYZ", "CMYK"],),
                 "preserve_alpha": ("BOOLEAN", {"default": True}),
             },
             "optional": {
+                "image": ("IMAGE",),
+                "image_path": ("STRING", {"default": "", "multiline": False}),
                 "gamma_correction": ("FLOAT", {"default": 2.2, "min": 0.1, "max": 5.0, "step": 0.1}),
             }
         }
@@ -37,53 +40,97 @@ class ColorSpaceConverter:
     FUNCTION = "convert_color_space"
     CATEGORY = "Color Tools/Conversion"
     
-    def convert_color_space(self, image: torch.Tensor, source_space: str, target_space: str, 
-                          preserve_alpha: bool, gamma_correction: float = 2.2) -> Tuple[torch.Tensor, str]:
+    def convert_color_space(self, input_mode: str, source_space: str, target_space: str, 
+                          preserve_alpha: bool, image: torch.Tensor = None, image_path: str = "", 
+                          gamma_correction: float = 2.2) -> Tuple[torch.Tensor, str]:
         """
         Convert image between color spaces.
+        Supports both file paths and image tensors.
         """
-        # Convert tensor to numpy
-        if len(image.shape) == 4:
-            batch_size, height, width, channels = image.shape
-            img_np = image[0].numpy()
+        if input_mode == "file":
+            return self._convert_from_file(image_path, source_space, target_space, preserve_alpha, gamma_correction)
         else:
-            height, width, channels = image.shape
-            img_np = image.numpy()
+            return self._convert_from_tensor(image, source_space, target_space, preserve_alpha, gamma_correction)
+    
+    def _convert_from_file(self, image_path: str, source_space: str, target_space: str, 
+                         preserve_alpha: bool, gamma_correction: float) -> Tuple[torch.Tensor, str]:
+        """Convert from file path"""
+        if not image_path.strip():
+            raise ValueError("Image path required when input_mode is 'file'")
         
-        # Ensure image is in [0, 1] range
-        if img_np.max() > 1.0:
-            img_np = img_np / 255.0
-        
-        # Handle alpha channel
-        has_alpha = channels == 4
-        if has_alpha and preserve_alpha:
-            alpha = img_np[:, :, 3:4]
-            rgb_img = img_np[:, :, :3]
-        else:
-            rgb_img = img_np[:, :, :3]
-            alpha = None
-        
-        # Convert to target color space
-        converted_img = self._convert_space(rgb_img, source_space, target_space, gamma_correction)
-        
-        # Reconstruct image with alpha if needed
-        if has_alpha and preserve_alpha:
-            if converted_img.shape[2] == 3:
-                converted_img = np.concatenate([converted_img, alpha], axis=2)
+        # Load image from file
+        img_array = self._load_image_from_path(image_path)
+        converted_array = self._convert_space(img_array, source_space, target_space, gamma_correction)
         
         # Convert back to tensor
-        converted_tensor = torch.from_numpy(converted_img).float()
-        if len(image.shape) == 4:
-            converted_tensor = converted_tensor.unsqueeze(0)
-        
-        # Create conversion info
-        info = f"Converted from {source_space} to {target_space}"
-        if has_alpha and preserve_alpha:
-            info += " (alpha preserved)"
+        converted_tensor = self._array_to_tensor(converted_array)
+        info = f"Converted file from {source_space} to {target_space}"
         
         return converted_tensor, info
     
-    def _convert_space(self, img: np.ndarray, source: str, target: str, gamma: float) -> np.ndarray:
+    def _convert_from_tensor(self, image: torch.Tensor, source_space: str, target_space: str, 
+                           preserve_alpha: bool, gamma_correction: float) -> Tuple[torch.Tensor, str]:
+        """Convert from image tensor"""
+        if image is None:
+            raise ValueError("Image tensor required when input_mode is 'tensor'")
+        
+        # Convert tensor to numpy
+        img_array = self._tensor_to_array(image)
+        converted_array = self._convert_space(img_array, source_space, target_space, gamma_correction)
+        
+        # Convert back to tensor
+        converted_tensor = self._array_to_tensor(converted_array)
+        info = f"Converted tensor from {source_space} to {target_space}"
+        
+        return converted_tensor, info
+    
+    def _load_image_from_path(self, image_path: str) -> np.ndarray:
+        """Load image from file path"""
+        from PIL import Image
+        pil_image = Image.open(image_path)
+        img_array = np.array(pil_image) / 255.0
+        return img_array
+    
+    def _tensor_to_array(self, tensor: torch.Tensor) -> np.ndarray:
+        """Convert ComfyUI tensor to numpy array"""
+        if len(tensor.shape) == 4:
+            return tensor[0].cpu().numpy()
+        else:
+            return tensor.cpu().numpy()
+    
+    def _array_to_tensor(self, array: np.ndarray) -> torch.Tensor:
+        """Convert numpy array to ComfyUI tensor"""
+        if len(array.shape) == 3:
+            array = array[np.newaxis, ...]
+        return torch.from_numpy(array).float()
+    
+    def _convert_space(self, img_array: np.ndarray, source_space: str, target_space: str, 
+                      gamma_correction: float) -> np.ndarray:
+        """Core color space conversion logic"""
+        # Ensure image is in [0, 1] range
+        if img_array.max() > 1.0:
+            img_array = img_array / 255.0
+        
+        # Handle alpha channel
+        has_alpha = img_array.shape[2] == 4
+        if has_alpha:
+            alpha = img_array[:, :, 3:4]
+            rgb_img = img_array[:, :, :3]
+        else:
+            rgb_img = img_array[:, :, :3]
+            alpha = None
+        
+        # Convert to target color space
+        converted_img = self._convert_space_internal(rgb_img, source_space, target_space, gamma_correction)
+        
+        # Reconstruct image with alpha if needed
+        if has_alpha:
+            if converted_img.shape[2] == 3:
+                converted_img = np.concatenate([converted_img, alpha], axis=2)
+        
+        return converted_img
+    
+    def _convert_space_internal(self, img: np.ndarray, source: str, target: str, gamma: float) -> np.ndarray:
         """Internal method to handle color space conversion."""
         if source == target:
             return img
@@ -97,6 +144,7 @@ class ColorSpaceConverter:
             return img
         else:
             return self._from_rgb(img, target, gamma)
+    
     
     def _to_rgb(self, img: np.ndarray, source_space: str, gamma: float) -> np.ndarray:
         """Convert from source space to RGB."""
@@ -141,15 +189,20 @@ class ColorSpaceConverter:
 class ColorTemperature:
     """
     Adjust color temperature and tint of images.
+    Works with both file paths and image tensors.
     """
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "input_mode": (["file", "tensor"], {"default": "tensor"}),
                 "temperature": ("FLOAT", {"default": 0.0, "min": -100.0, "max": 100.0, "step": 1.0}),
                 "tint": ("FLOAT", {"default": 0.0, "min": -100.0, "max": 100.0, "step": 1.0}),
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image_path": ("STRING", {"default": "", "multiline": False}),
             }
         }
     
@@ -158,29 +211,60 @@ class ColorTemperature:
     FUNCTION = "adjust_temperature"
     CATEGORY = "Color Tools/Conversion"
     
-    def adjust_temperature(self, image: torch.Tensor, temperature: float, tint: float) -> torch.Tensor:
+    def adjust_temperature(self, input_mode: str, temperature: float, tint: float, 
+                          image: torch.Tensor = None, image_path: str = "") -> torch.Tensor:
         """
         Adjust color temperature and tint.
+        Supports both file paths and image tensors.
         """
-        # Convert tensor to numpy
-        if len(image.shape) == 4:
-            img_np = image[0].numpy()
+        if input_mode == "file":
+            return self._adjust_from_file(image_path, temperature, tint)
         else:
-            img_np = image.numpy()
+            return self._adjust_from_tensor(image, temperature, tint)
+    
+    def _adjust_from_file(self, image_path: str, temperature: float, tint: float) -> torch.Tensor:
+        """Adjust temperature from file"""
+        if not image_path.strip():
+            raise ValueError("Image path required when input_mode is 'file'")
         
-        # Ensure image is in [0, 1] range
-        if img_np.max() > 1.0:
-            img_np = img_np / 255.0
-        
-        # Apply temperature adjustment
-        adjusted_img = self._apply_temperature_tint(img_np, temperature, tint)
+        # Load image from file
+        img_array = self._load_image_from_path(image_path)
+        adjusted_array = self._apply_temperature_tint(img_array, temperature, tint)
         
         # Convert back to tensor
-        adjusted_tensor = torch.from_numpy(adjusted_img).float()
-        if len(image.shape) == 4:
-            adjusted_tensor = adjusted_tensor.unsqueeze(0)
+        return self._array_to_tensor(adjusted_array)
+    
+    def _adjust_from_tensor(self, image: torch.Tensor, temperature: float, tint: float) -> torch.Tensor:
+        """Adjust temperature from tensor"""
+        if image is None:
+            raise ValueError("Image tensor required when input_mode is 'tensor'")
         
-        return adjusted_tensor
+        # Convert tensor to numpy
+        img_array = self._tensor_to_array(image)
+        adjusted_array = self._apply_temperature_tint(img_array, temperature, tint)
+        
+        # Convert back to tensor
+        return self._array_to_tensor(adjusted_array)
+    
+    def _load_image_from_path(self, image_path: str) -> np.ndarray:
+        """Load image from file path"""
+        from PIL import Image
+        pil_image = Image.open(image_path)
+        img_array = np.array(pil_image) / 255.0
+        return img_array
+    
+    def _tensor_to_array(self, tensor: torch.Tensor) -> np.ndarray:
+        """Convert ComfyUI tensor to numpy array"""
+        if len(tensor.shape) == 4:
+            return tensor[0].cpu().numpy()
+        else:
+            return tensor.cpu().numpy()
+    
+    def _array_to_tensor(self, array: np.ndarray) -> torch.Tensor:
+        """Convert numpy array to ComfyUI tensor"""
+        if len(array.shape) == 3:
+            array = array[np.newaxis, ...]
+        return torch.from_numpy(array).float()
     
     def _apply_temperature_tint(self, img: np.ndarray, temp: float, tint: float) -> np.ndarray:
         """Apply temperature and tint adjustments."""
@@ -207,13 +291,18 @@ class ColorTemperature:
 class ColorSpaceAnalyzer:
     """
     Analyze color space properties and provide information about the image.
+    Works with both file paths and image tensors.
     """
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "input_mode": (["file", "tensor"], {"default": "tensor"}),
+            },
+            "optional": {
                 "image": ("IMAGE",),
+                "image_path": ("STRING", {"default": "", "multiline": False}),
             }
         }
     
@@ -222,24 +311,58 @@ class ColorSpaceAnalyzer:
     FUNCTION = "analyze_color_space"
     CATEGORY = "Color Tools/Conversion"
     
-    def analyze_color_space(self, image: torch.Tensor) -> Tuple[str, str, str]:
+    def analyze_color_space(self, input_mode: str, image: torch.Tensor = None, image_path: str = "") -> Tuple[str, str, str]:
         """
         Analyze the color space properties of the image.
+        Supports both file paths and image tensors.
         """
-        # Convert tensor to numpy
-        if len(image.shape) == 4:
-            img_np = image[0].numpy()
+        if input_mode == "file":
+            return self._analyze_from_file(image_path)
         else:
-            img_np = image.numpy()
+            return self._analyze_from_tensor(image)
+    
+    def _analyze_from_file(self, image_path: str) -> Tuple[str, str, str]:
+        """Analyze from file"""
+        if not image_path.strip():
+            raise ValueError("Image path required when input_mode is 'file'")
         
+        # Load image from file
+        img_array = self._load_image_from_path(image_path)
+        return self._analyze_image_array(img_array)
+    
+    def _analyze_from_tensor(self, image: torch.Tensor) -> Tuple[str, str, str]:
+        """Analyze from tensor"""
+        if image is None:
+            raise ValueError("Image tensor required when input_mode is 'tensor'")
+        
+        # Convert tensor to numpy
+        img_array = self._tensor_to_array(image)
+        return self._analyze_image_array(img_array)
+    
+    def _load_image_from_path(self, image_path: str) -> np.ndarray:
+        """Load image from file path"""
+        from PIL import Image
+        pil_image = Image.open(image_path)
+        img_array = np.array(pil_image) / 255.0
+        return img_array
+    
+    def _tensor_to_array(self, tensor: torch.Tensor) -> np.ndarray:
+        """Convert ComfyUI tensor to numpy array"""
+        if len(tensor.shape) == 4:
+            return tensor[0].cpu().numpy()
+        else:
+            return tensor.cpu().numpy()
+    
+    def _analyze_image_array(self, img_array: np.ndarray) -> Tuple[str, str, str]:
+        """Core analysis logic"""
         # Ensure image is in [0, 1] range
-        if img_np.max() > 1.0:
-            img_np = img_np / 255.0
+        if img_array.max() > 1.0:
+            img_array = img_array / 255.0
         
         # Analyze color space
-        info = self._get_color_space_info(img_np)
-        stats = self._get_color_statistics(img_np)
-        recommendations = self._get_recommendations(img_np)
+        info = self._get_color_space_info(img_array)
+        stats = self._get_color_statistics(img_array)
+        recommendations = self._get_recommendations(img_array)
         
         return info, stats, recommendations
     

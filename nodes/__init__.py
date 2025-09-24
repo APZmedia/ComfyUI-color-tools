@@ -25,8 +25,40 @@ from .color_converter_advanced import (
     ColorConverterAdvanced,
 )
 
+# Import dual input nodes
+from .color_conversion import (
+    ColorSpaceConverter,
+    ColorTemperature,
+    ColorSpaceAnalyzer,
+)
+
+from .color_grading import (
+    ColorBalance,
+    BrightnessContrast,
+    Saturation,
+    HueShift,
+    GammaCorrection,
+)
+
+from .color_analysis import (
+    DominantColors,
+    ColorHistogram,
+    ColorPalette,
+    ColorSimilarity,
+    ColorHarmony,
+)
+
+# Import utility functions
+from .color_utils import (
+    ColorInputHandler,
+    create_dual_input_types,
+    create_file_only_input_types,
+    validate_dual_input,
+    get_standard_dual_input_params,
+)
+
 __all__ = [
-    # Color Profile Reader
+    # Color Profile Reader (File-only)
     "ColorProfileReader",
     "GammaCompare",
     
@@ -35,4 +67,30 @@ __all__ = [
     
     # Advanced Color Converter
     "ColorConverterAdvanced",
+    
+    # Dual Input Conversion Nodes
+    "ColorSpaceConverter",
+    "ColorTemperature",
+    "ColorSpaceAnalyzer",
+    
+    # Dual Input Grading Nodes
+    "ColorBalance",
+    "BrightnessContrast",
+    "Saturation",
+    "HueShift",
+    "GammaCorrection",
+    
+    # Dual Input Analysis Nodes
+    "DominantColors",
+    "ColorHistogram",
+    "ColorPalette",
+    "ColorSimilarity",
+    "ColorHarmony",
+    
+    # Utility Functions
+    "ColorInputHandler",
+    "create_dual_input_types",
+    "create_file_only_input_types",
+    "validate_dual_input",
+    "get_standard_dual_input_params",
 ]

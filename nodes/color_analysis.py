@@ -16,15 +16,20 @@ from typing import Tuple, Dict, Any, List, Optional
 class DominantColors:
     """
     Extract dominant colors from an image using K-means clustering.
+    Works with both file paths and image tensors.
     """
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "input_mode": (["file", "tensor"], {"default": "tensor"}),
                 "num_colors": ("INT", {"default": 5, "min": 1, "max": 20, "step": 1}),
                 "color_format": (["RGB", "HSV", "HEX"], {"default": "RGB"}),
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image_path": ("STRING", {"default": "", "multiline": False}),
             }
         }
     
@@ -33,26 +38,61 @@ class DominantColors:
     FUNCTION = "extract_dominant_colors"
     CATEGORY = "Color Tools/Analysis"
     
-    def extract_dominant_colors(self, image: torch.Tensor, num_colors: int, color_format: str) -> Tuple[str, str]:
+    def extract_dominant_colors(self, input_mode: str, num_colors: int, color_format: str, 
+                               image: torch.Tensor = None, image_path: str = "") -> Tuple[str, str]:
         """
         Extract dominant colors from the image.
+        Supports both file paths and image tensors.
         """
-        # Convert tensor to numpy
-        if len(image.shape) == 4:
-            img_np = image[0].numpy()
+        if input_mode == "file":
+            return self._extract_from_file(image_path, num_colors, color_format)
         else:
-            img_np = image.numpy()
+            return self._extract_from_tensor(image, num_colors, color_format)
+    
+    def _extract_from_file(self, image_path: str, num_colors: int, color_format: str) -> Tuple[str, str]:
+        """Extract colors from file"""
+        if not image_path.strip():
+            raise ValueError("Image path required when input_mode is 'file'")
         
+        # Load image from file
+        img_array = self._load_image_from_path(image_path)
+        return self._extract_colors(img_array, num_colors, color_format)
+    
+    def _extract_from_tensor(self, image: torch.Tensor, num_colors: int, color_format: str) -> Tuple[str, str]:
+        """Extract colors from tensor"""
+        if image is None:
+            raise ValueError("Image tensor required when input_mode is 'tensor'")
+        
+        # Convert tensor to numpy
+        img_array = self._tensor_to_array(image)
+        return self._extract_colors(img_array, num_colors, color_format)
+    
+    def _load_image_from_path(self, image_path: str) -> np.ndarray:
+        """Load image from file path"""
+        from PIL import Image
+        pil_image = Image.open(image_path)
+        img_array = np.array(pil_image) / 255.0
+        return img_array
+    
+    def _tensor_to_array(self, tensor: torch.Tensor) -> np.ndarray:
+        """Convert ComfyUI tensor to numpy array"""
+        if len(tensor.shape) == 4:
+            return tensor[0].cpu().numpy()
+        else:
+            return tensor.cpu().numpy()
+    
+    def _extract_colors(self, img_array: np.ndarray, num_colors: int, color_format: str) -> Tuple[str, str]:
+        """Core color extraction logic"""
         # Ensure image is in [0, 1] range
-        if img_np.max() > 1.0:
-            img_np = img_np / 255.0
+        if img_array.max() > 1.0:
+            img_array = img_array / 255.0
         
         # Extract dominant colors
-        colors, percentages = self._extract_colors(img_np, num_colors, color_format)
+        colors, percentages = self._extract_colors_internal(img_array, num_colors, color_format)
         
         return colors, percentages
     
-    def _extract_colors(self, img: np.ndarray, num_colors: int, color_format: str) -> Tuple[str, str]:
+    def _extract_colors_internal(self, img: np.ndarray, num_colors: int, color_format: str) -> Tuple[str, str]:
         """Extract dominant colors using K-means clustering."""
         # Reshape image to list of pixels
         pixels = img.reshape(-1, 3)
@@ -296,16 +336,21 @@ class ColorPalette:
 class ColorSimilarity:
     """
     Find similar colors in an image based on color distance.
+    Works with both file paths and image tensors.
     """
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "input_mode": (["file", "tensor"], {"default": "tensor"}),
                 "target_color": ("STRING", {"default": "#FF0000"}),
                 "similarity_threshold": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "color_space": (["RGB", "HSV", "LAB"], {"default": "LAB"}),
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image_path": ("STRING", {"default": "", "multiline": False}),
             }
         }
     
@@ -314,33 +359,78 @@ class ColorSimilarity:
     FUNCTION = "find_similar_colors"
     CATEGORY = "Color Tools/Analysis"
     
-    def find_similar_colors(self, image: torch.Tensor, target_color: str, 
-                           similarity_threshold: float, color_space: str) -> Tuple[torch.Tensor, str]:
+    def find_similar_colors(self, input_mode: str, target_color: str, 
+                           similarity_threshold: float, color_space: str, 
+                           image: torch.Tensor = None, image_path: str = "") -> Tuple[torch.Tensor, str]:
         """
         Find colors similar to the target color.
+        Supports both file paths and image tensors.
         """
-        # Convert tensor to numpy
-        if len(image.shape) == 4:
-            img_np = image[0].numpy()
+        if input_mode == "file":
+            return self._find_from_file(image_path, target_color, similarity_threshold, color_space)
         else:
-            img_np = image.numpy()
+            return self._find_from_tensor(image, target_color, similarity_threshold, color_space)
+    
+    def _find_from_file(self, image_path: str, target_color: str, 
+                       similarity_threshold: float, color_space: str) -> Tuple[torch.Tensor, str]:
+        """Find similar colors from file"""
+        if not image_path.strip():
+            raise ValueError("Image path required when input_mode is 'file'")
         
+        # Load image from file
+        img_array = self._load_image_from_path(image_path)
+        mask, info = self._find_similar_colors(img_array, target_color, similarity_threshold, color_space)
+        
+        # Convert mask back to tensor
+        return self._array_to_tensor(mask), info
+    
+    def _find_from_tensor(self, image: torch.Tensor, target_color: str, 
+                         similarity_threshold: float, color_space: str) -> Tuple[torch.Tensor, str]:
+        """Find similar colors from tensor"""
+        if image is None:
+            raise ValueError("Image tensor required when input_mode is 'tensor'")
+        
+        # Convert tensor to numpy
+        img_array = self._tensor_to_array(image)
+        mask, info = self._find_similar_colors(img_array, target_color, similarity_threshold, color_space)
+        
+        # Convert mask back to tensor
+        return self._array_to_tensor(mask), info
+    
+    def _load_image_from_path(self, image_path: str) -> np.ndarray:
+        """Load image from file path"""
+        from PIL import Image
+        pil_image = Image.open(image_path)
+        img_array = np.array(pil_image) / 255.0
+        return img_array
+    
+    def _tensor_to_array(self, tensor: torch.Tensor) -> np.ndarray:
+        """Convert ComfyUI tensor to numpy array"""
+        if len(tensor.shape) == 4:
+            return tensor[0].cpu().numpy()
+        else:
+            return tensor.cpu().numpy()
+    
+    def _array_to_tensor(self, array: np.ndarray) -> torch.Tensor:
+        """Convert numpy array to ComfyUI tensor"""
+        if len(array.shape) == 3:
+            array = array[np.newaxis, ...]
+        return torch.from_numpy(array).float()
+    
+    def _find_similar_colors(self, img_array: np.ndarray, target_color: str, 
+                           similarity_threshold: float, color_space: str) -> Tuple[np.ndarray, str]:
+        """Core similarity finding logic"""
         # Ensure image is in [0, 1] range
-        if img_np.max() > 1.0:
-            img_np = img_np / 255.0
+        if img_array.max() > 1.0:
+            img_array = img_array / 255.0
         
         # Parse target color
         target_rgb = self._parse_color(target_color)
         
         # Find similar colors
-        mask, info = self._find_similar_colors(img_np, target_rgb, similarity_threshold, color_space)
+        mask, info = self._find_similar_colors_internal(img_array, target_rgb, similarity_threshold, color_space)
         
-        # Convert mask back to tensor
-        mask_tensor = torch.from_numpy(mask).float()
-        if len(image.shape) == 4:
-            mask_tensor = mask_tensor.unsqueeze(0)
-        
-        return mask_tensor, info
+        return mask, info
     
     def _parse_color(self, color_str: str) -> np.ndarray:
         """Parse color string to RGB values."""
@@ -399,15 +489,20 @@ class ColorSimilarity:
 class ColorHarmony:
     """
     Analyze color harmony and relationships in images.
+    Works with both file paths and image tensors.
     """
     
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "input_mode": (["file", "tensor"], {"default": "tensor"}),
                 "harmony_type": (["Complementary", "Triadic", "Analogous", "Split-Complementary"], 
                                {"default": "Complementary"}),
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image_path": ("STRING", {"default": "", "multiline": False}),
             }
         }
     
@@ -416,26 +511,61 @@ class ColorHarmony:
     FUNCTION = "analyze_color_harmony"
     CATEGORY = "Color Tools/Analysis"
     
-    def analyze_color_harmony(self, image: torch.Tensor, harmony_type: str) -> Tuple[str, str]:
+    def analyze_color_harmony(self, input_mode: str, harmony_type: str, 
+                            image: torch.Tensor = None, image_path: str = "") -> Tuple[str, str]:
         """
         Analyze color harmony in the image.
+        Supports both file paths and image tensors.
         """
-        # Convert tensor to numpy
-        if len(image.shape) == 4:
-            img_np = image[0].numpy()
+        if input_mode == "file":
+            return self._analyze_from_file(image_path, harmony_type)
         else:
-            img_np = image.numpy()
+            return self._analyze_from_tensor(image, harmony_type)
+    
+    def _analyze_from_file(self, image_path: str, harmony_type: str) -> Tuple[str, str]:
+        """Analyze harmony from file"""
+        if not image_path.strip():
+            raise ValueError("Image path required when input_mode is 'file'")
         
+        # Load image from file
+        img_array = self._load_image_from_path(image_path)
+        return self._analyze_harmony(img_array, harmony_type)
+    
+    def _analyze_from_tensor(self, image: torch.Tensor, harmony_type: str) -> Tuple[str, str]:
+        """Analyze harmony from tensor"""
+        if image is None:
+            raise ValueError("Image tensor required when input_mode is 'tensor'")
+        
+        # Convert tensor to numpy
+        img_array = self._tensor_to_array(image)
+        return self._analyze_harmony(img_array, harmony_type)
+    
+    def _load_image_from_path(self, image_path: str) -> np.ndarray:
+        """Load image from file path"""
+        from PIL import Image
+        pil_image = Image.open(image_path)
+        img_array = np.array(pil_image) / 255.0
+        return img_array
+    
+    def _tensor_to_array(self, tensor: torch.Tensor) -> np.ndarray:
+        """Convert ComfyUI tensor to numpy array"""
+        if len(tensor.shape) == 4:
+            return tensor[0].cpu().numpy()
+        else:
+            return tensor.cpu().numpy()
+    
+    def _analyze_harmony(self, img_array: np.ndarray, harmony_type: str) -> Tuple[str, str]:
+        """Core harmony analysis logic"""
         # Ensure image is in [0, 1] range
-        if img_np.max() > 1.0:
-            img_np = img_np / 255.0
+        if img_array.max() > 1.0:
+            img_array = img_array / 255.0
         
         # Analyze color harmony
-        harmony_analysis, color_relationships = self._analyze_harmony(img_np, harmony_type)
+        harmony_analysis, color_relationships = self._analyze_harmony_internal(img_array, harmony_type)
         
         return harmony_analysis, color_relationships
     
-    def _analyze_harmony(self, img: np.ndarray, harmony_type: str) -> Tuple[str, str]:
+    def _analyze_harmony_internal(self, img: np.ndarray, harmony_type: str) -> Tuple[str, str]:
         """Analyze color harmony."""
         # Convert to HSV for hue analysis
         hsv = cv2.cvtColor((img * 255).astype(np.uint8), cv2.COLOR_RGB2HSV)
