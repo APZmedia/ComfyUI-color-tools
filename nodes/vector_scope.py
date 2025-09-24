@@ -25,6 +25,8 @@ class VectorScope:
         self.cols = 512
         self.rows = 512
         
+        self.color_cache = {}  # Add color cache
+        
         # Misc constant values
         self.margin = 10
         self.outerlinewidth = 2
@@ -55,8 +57,9 @@ class VectorScope:
     
     def _calc_maxval(self):
         """Calculate maximum value for normalization."""
-        ry = self.a_r
-        by = self.c_b
+        # Calculate maxval based on max possible r, g, b values (1.0)
+        ry = self.a_r * 1.0 + self.b_r * 1.0 + self.c_r * 1.0
+        by = self.a_b * 1.0 + self.b_b * 1.0 + self.c_b * 1.0
         self.maxval = self._calc_ec(ry, by)
     
     def _calc_ryby(self, r: float, g: float, b: float) -> Tuple[float, float]:
@@ -130,28 +133,12 @@ class VectorScope:
         x2, y2 = self._rgb2cart(center_x, center_y, radius * (1. - 0.2 + self.al_out_rad), v[0], v[1], v[2], -10.)
         cv2.line(result_img, (x, y), (x2, y2), self.outerlinecolor, self.al_thick)
         
-        x, y = self._rgb2cart(center_x, center_y, radius * (1. - 0.2), v[0], v[1], v[2], 10.)
-        x2, y2 = self._rgb2cart(center_x, center_y, radius * (1. - 0.2), v[0], v[1], v[2], 10. - self.al_out_angle)
-        cv2.line(result_img, (x, y), (x2, y2), self.outerlinecolor, self.al_thick)
-        
-        x, y = self._rgb2cart(center_x, center_y, radius * (1. - 0.2), v[0], v[1], v[2], 10.)
-        x2, y2 = self._rgb2cart(center_x, center_y, radius * (1. - 0.2 + self.al_out_rad), v[0], v[1], v[2], 10.)
-        cv2.line(result_img, (x, y), (x2, y2), self.outerlinecolor, self.al_thick)
-        
         x, y = self._rgb2cart(center_x, center_y, radius * (1. + 0.2), v[0], v[1], v[2], -10.)
         x2, y2 = self._rgb2cart(center_x, center_y, radius * (1. + 0.2), v[0], v[1], v[2], -10. + self.al_out_angle)
         cv2.line(result_img, (x, y), (x2, y2), self.outerlinecolor, self.al_thick)
         
         x, y = self._rgb2cart(center_x, center_y, radius * (1. + 0.2), v[0], v[1], v[2], -10.)
         x2, y2 = self._rgb2cart(center_x, center_y, radius * (1. + 0.2 - self.al_out_rad), v[0], v[1], v[2], -10.)
-        cv2.line(result_img, (x, y), (x2, y2), self.outerlinecolor, self.al_thick)
-        
-        x, y = self._rgb2cart(center_x, center_y, radius * (1. + 0.2), v[0], v[1], v[2], 10.)
-        x2, y2 = self._rgb2cart(center_x, center_y, radius * (1. + 0.2), v[0], v[1], v[2], 10. - self.al_out_angle)
-        cv2.line(result_img, (x, y), (x2, y2), self.outerlinecolor, self.al_thick)
-        
-        x, y = self._rgb2cart(center_x, center_y, radius * (1. + 0.2), v[0], v[1], v[2], 10.)
-        x2, y2 = self._rgb2cart(center_x, center_y, radius * (1. + 0.2 - self.al_out_rad), v[0], v[1], v[2], 10.)
         cv2.line(result_img, (x, y), (x2, y2), self.outerlinecolor, self.al_thick)
         
         x, y = self._rgb2cart(center_x, center_y, radius, v[0], v[1], v[2], 0.)
@@ -201,20 +188,15 @@ class VectorScope:
     
     def _draw_pixel(self, result_img: np.ndarray, center_x: int, center_y: int, radius: int, bgr: np.ndarray):
         """Draw a single pixel on the vectorscope."""
-        col = (int(bgr[0] * 255.), int(bgr[1] * 255.), int(bgr[2] * 255.))
-        x, y = self._rgb2cart(center_x, center_y, radius, bgr[2], bgr[1], bgr[0], 0.)
+        offset = 0.001
+        r = bgr[2] + offset
+        g = bgr[1] + offset
+        b = bgr[0] + offset
+        col = (int(b * 255.), int(g * 255.), int(r * 255.))
+        x, y = self._rgb2cart(center_x, center_y, radius, r, g, b, 0.)
         cv2.circle(result_img, (x, y), self.dot_radius, col, -1)
     
     def generate_vectorscope(self, image_tensor: torch.Tensor) -> torch.Tensor:
-        """
-        Generate vector scope visualization from image tensor.
-        
-        Args:
-            image_tensor: Input image tensor with shape [B, H, W, C] or [H, W, C]
-        
-        Returns:
-            Vector scope image as tensor with shape [1, H, W, C]
-        """
         # Convert tensor to numpy array
         if len(image_tensor.shape) == 4:
             # Remove batch dimension if present
@@ -245,6 +227,9 @@ class VectorScope:
         # Reshape to 1D for processing
         lin_image = (np.reshape(image_array, (height * width, 3))).astype(np.float64)
         
+        # Pre-calculate color cache
+        self._precalculate_color_cache(radius)
+
         # Plot all pixels
         for bgr in lin_image:
             self._draw_pixel(result_img, center_x, center_y, radius, bgr)
@@ -258,6 +243,15 @@ class VectorScope:
         
         return result_tensor
 
+    def _precalculate_color_cache(self, radius: int):
+        """Pre-calculate color cache for performance."""
+        for r in np.arange(0, 1.01, 0.1):
+            for g in np.arange(0, 1.01, 0.1):
+                for b in np.arange(0, 1.01, 0.1):
+                    ry, by = self._calc_ryby(r, g, b)
+                    ec = self._calc_ec(ry, by)
+                    theta = self._calc_theta(ry, by)
+                    self.color_cache[(r, g, b)] = (ec, theta)
 
 # ComfyUI Node Implementation
 class VectorScopeNode:
