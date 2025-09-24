@@ -20,46 +20,6 @@ def get_ocio_config_path():
     """Gets the path to the bundled OCIO config."""
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ocio", "config.ocio")
 
-def get_ocio_spaces():
-    """Dynamically get the color spaces from the current OCIO config."""
-    if ocio is None:
-        return ["sRGB", "Linear", "raw"]
-    try:
-        # First, try to load the bundled config
-        config_path = get_ocio_config_path()
-        if os.path.exists(config_path):
-            config = ocio.Config.CreateFromFile(config_path)
-        else:
-            # Fallback to the system's default config
-            config = ocio.GetCurrentConfig()
-        return [cs.getName() for cs in config.getColorSpaces()]
-    except ocio.Exception:
-        # If all else fails, return a safe list
-        return ["sRGB", "Linear", "raw"]
-
-# Mapping from display spaces to their linear equivalents
-# This is now a fallback, as the code will try to dynamically find a linear space
-DISPLAY_TO_LINEAR_MAP = {
-    "sRGB": "Linear",
-    "Rec.709": "Linear",
-    "Rec.2020": "Linear",
-    "P3-D65": "Linear P3-D65", # Example for a more complex config
-}
-
-def get_linear_equivalent(space_name: str, config) -> str:
-    """Finds the linear version of a display space, or returns it if already linear."""
-    if "linear" in space_name.lower():
-        return space_name
-
-    # Try to find a space with the same name but "Linear" in it
-    for cs in config.getColorSpaces():
-        if f"linear {space_name.lower()}" in cs.getName().lower():
-            return cs.getName()
-            
-    # Fallback to the hardcoded map
-    return DISPLAY_TO_LINEAR_MAP.get(space_name, space_name)
-
-
 class AdvancedOcioColorTransform:
     """
     An advanced OCIO node for fine-grained control over color space conversions.
@@ -70,8 +30,8 @@ class AdvancedOcioColorTransform:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "source_space": (get_ocio_spaces(), {"default": "sRGB"}),
-                "dest_space": (get_ocio_spaces(), {"default": "sRGB"}),
+                "source_space": ("STRING", {"default": "sRGB"}),
+                "dest_space": ("STRING", {"default": "sRGB"}),
                 "fix_transfer": ("BOOLEAN", {"default": True}),
                 "fix_gamut": ("BOOLEAN", {"default": True}),
                 "gamut_compress": ("BOOLEAN", {"default": False}),
@@ -80,6 +40,8 @@ class AdvancedOcioColorTransform:
                 "gc_scale": ("FLOAT", {"default": 0.9, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "alpha_mode": (["passthrough", "premultiply"], {"default": "passthrough"}),
                 "clip_after": ("BOOLEAN", {"default": True}),
+            },
+            "optional": {
                 "ocio_config_path": ("STRING", {"default": get_ocio_config_path(), "multiline": False}),
             }
         }
@@ -88,11 +50,31 @@ class AdvancedOcioColorTransform:
     RETURN_NAMES = ("image", "transform_info")
     FUNCTION = "transform_image"
     CATEGORY = "Color Tools/OCIO"
+    
+    @classmethod
+    def get_display_name(cls, **kwargs):
+        """Dynamically set the display name with available color spaces."""
+        if ocio is None:
+            return "Advanced OCIO Transform (PyOpenColorIO not installed)"
+
+        config_path = kwargs.get("ocio_config_path", get_ocio_config_path())
+        
+        try:
+            if config_path and os.path.exists(config_path):
+                config = ocio.Config.CreateFromFile(config_path)
+            else:
+                config = ocio.GetCurrentConfig()
+            
+            spaces = [cs.getName() for cs in config.getColorSpaces()]
+            return f"Advanced OCIO Transform (Spaces: {', '.join(spaces[:4])}...)"
+        except ocio.Exception as e:
+            return f"Advanced OCIO Transform (Error: {e})"
+
 
     def transform_image(self, image: torch.Tensor, source_space: str, dest_space: str,
                         fix_transfer: bool, fix_gamut: bool, gamut_compress: bool,
                         gc_threshold: float, gc_power: float, gc_scale: float,
-                        alpha_mode: str, clip_after: bool, ocio_config_path: str) -> Tuple[torch.Tensor, str]:
+                        alpha_mode: str, clip_after: bool, ocio_config_path: str = "") -> Tuple[torch.Tensor, str]:
 
         if ocio is None:
             raise ImportError("PyOpenColorIO is required for this node to work.")
@@ -120,8 +102,8 @@ class AdvancedOcioColorTransform:
         transforms = []
         current_space = source_space
         
-        source_linear = get_linear_equivalent(source_space, config)
-        dest_linear = get_linear_equivalent(dest_space, config)
+        source_linear = self.get_linear_equivalent(source_space, config)
+        dest_linear = self.get_linear_equivalent(dest_space, config)
 
         # Stage A: Decode transfer
         if fix_transfer and current_space != source_linear:
@@ -178,3 +160,20 @@ class AdvancedOcioColorTransform:
         }
         
         return result_tensor, str(info)
+    
+    def get_linear_equivalent(self, space_name: str, config) -> str:
+        """Finds the linear version of a display space, or returns it if already linear."""
+        if "linear" in space_name.lower():
+            return space_name
+
+        # Try to find a space with the same name but "Linear" in it
+        for cs in config.getColorSpaces():
+            if f"linear {space_name.lower()}" in cs.getName().lower():
+                return cs.getName()
+                
+        # Fallback to a simple map (less reliable)
+        fallback_map = {
+            "sRGB": "Linear",
+            "Rec.709": "Linear",
+        }
+        return fallback_map.get(space_name, space_name)
