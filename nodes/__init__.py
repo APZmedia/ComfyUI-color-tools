@@ -48,6 +48,10 @@ from .color_analysis import (
     ColorHarmony,
 )
 
+from .vector_scope import (
+    VectorScope,
+)
+
 # Import utility functions
 from .color_utils import (
     ColorInputHandler,
@@ -86,6 +90,9 @@ __all__ = [
     "ColorPalette",
     "ColorSimilarity",
     "ColorHarmony",
+    
+    # Vector Scope Node
+    "VectorScope",
     
     # Utility Functions
     "ColorInputHandler",
