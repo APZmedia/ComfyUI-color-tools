@@ -13,8 +13,10 @@ import os
 try:
     import PyOpenColorIO as ocio
     from .ocio_defs import OCIO_SPACES
-except ImportError:
-    print("[Color Tools] ❌ PyOpenColorIO or ocio_defs.py not available. Advanced OCIO node will not work.")
+    print(f"[Color Tools] ✅ OCIO_SPACES loaded: {len(OCIO_SPACES)} spaces")
+except ImportError as e:
+    print(f"[Color Tools] ❌ Failed to import OCIO dependencies: {e}")
+    print("[Color Tools] ❌ Advanced OCIO node will not be available.")
     ocio = None
     OCIO_SPACES = ["sRGB", "Linear", "raw"]
 
@@ -30,7 +32,7 @@ DISPLAY_TO_LINEAR_MAP = {
     "Linear Rec.709": "Linear Rec.709",
     "Linear Rec.2020": "Linear Rec.2020",
     "Linear P3-D65": "Linear P3-D65",
-    # Non-linear spaces that might map to Linear
+    # Non-linear spaces that might map to LinearTi
     "Log2": "Linear",
     "XYZ": "Linear"  # XYZ is scene-linear
 }
