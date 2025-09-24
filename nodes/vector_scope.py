@@ -201,8 +201,8 @@ class VectorScope:
     
     def _draw_pixel(self, result_img: np.ndarray, center_x: int, center_y: int, radius: int, bgr: np.ndarray):
         """Draw a single pixel on the vectorscope."""
-        x, y = self._rgb2cart(center_x, center_y, radius, bgr[2], bgr[1], bgr[0], 0.)
         col = (int(bgr[0] * 255.), int(bgr[1] * 255.), int(bgr[2] * 255.))
+        x, y = self._rgb2cart(center_x, center_y, radius, bgr[2], bgr[1], bgr[0], 0.)
         cv2.circle(result_img, (x, y), self.dot_radius, col, -1)
     
     def generate_vectorscope(self, image_tensor: torch.Tensor) -> torch.Tensor:
