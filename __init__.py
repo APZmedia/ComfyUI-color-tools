@@ -38,6 +38,9 @@ try:
     # Dual input analysis nodes
     from .nodes.color_analysis import DominantColors, ColorHistogram, ColorPalette, ColorSimilarity, ColorHarmony
     
+    # Vector scope node
+    from .nodes.vector_scope import VectorScopeNode
+    
     # OCIO nodes
     from .nodes.ocio_tools import OCIOColorSpaceConverter, OCIOConfigInfo, TestPatternGenerator
     from .nodes.ocio_advanced import AdvancedOcioColorTransform
@@ -71,6 +74,9 @@ try:
         "ColorPalette": ColorPalette,
         "ColorSimilarity": ColorSimilarity,
         "ColorHarmony": ColorHarmony,
+        
+        # Vector scope node
+        "VectorScope": VectorScopeNode,
         
         # OCIO nodes
         "OCIOColorSpaceConverter": OCIOColorSpaceConverter,
@@ -113,6 +119,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ColorPalette": "Color Palette",
     "ColorSimilarity": "Color Similarity",
     "ColorHarmony": "Color Harmony",
+    
+    # Vector scope node
+    "VectorScope": "Vector Scope",
     
     # OCIO nodes
     "OCIOColorSpaceConverter": "OCIO Color Space Converter",

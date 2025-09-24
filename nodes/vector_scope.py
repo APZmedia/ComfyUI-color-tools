@@ -11,6 +11,9 @@ import cv2
 import math
 from typing import Tuple
 
+print("[Color Tools] 🎯 Initializing Vector Scope node...")
+print("[Color Tools] ✅ Vector Scope node initialized successfully")
+
 
 class VectorScope:
     """
@@ -291,6 +294,8 @@ class VectorScopeNode:
         Returns:
             Vector scope image tensor
         """
+        print(f"[Color Tools] 🎯 Generating vector scope: {image.shape} -> {scope_size}x{scope_size}")
+        
         # Create vectorscope generator
         vs = VectorScope()
         vs.cols = scope_size
@@ -302,6 +307,7 @@ class VectorScopeNode:
         # Generate vectorscope
         result = vs.generate_vectorscope(image)
         
+        print(f"[Color Tools] ✅ Vector scope generated successfully")
         return (result,)
 
 
